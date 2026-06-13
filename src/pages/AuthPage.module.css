@@ -1,0 +1,113 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg-base);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated grid lines background — inspired by 21st.dev */
+.page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+}
+
+/* Radial vignette to darken edges */
+.page::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 40%, transparent 40%, rgba(11,17,32,0.9) 100%);
+  pointer-events: none;
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(20, 30, 50, 0.85);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: var(--radius-lg);
+  padding: 44px 40px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+  position: relative;
+  z-index: 1;
+
+  animation: cardIn 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Green accent corner */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  opacity: 0.6;
+}
+
+.logo {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 32px;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.logo:hover { opacity: 0.75; }
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.4px;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  margin-bottom: 32px;
+  line-height: 1.5;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.footer {
+  margin-top: 28px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.link {
+  color: var(--accent);
+  font-weight: 500;
+  transition: opacity 0.15s;
+}
+.link:hover { opacity: 0.8; text-decoration: underline; }

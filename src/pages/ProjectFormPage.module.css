@@ -1,0 +1,206 @@
+.page {
+  max-width: 660px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.header {}
+.title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+.subtitle {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* Tag picker compound input */
+.tagPicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 12px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  min-height: 48px;
+  transition: border-color 0.15s;
+}
+
+.newTagRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+}
+
+.newTagInput {
+  flex: 1;
+  height: 30px !important;
+  font-size: 12px !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  padding: 0 4px !important;
+}
+.newTagInput:focus {
+  border-color: var(--border-focus) !important;
+  background: rgba(255,255,255,0.04) !important;
+  padding: 0 8px !important;
+  border-radius: 6px !important;
+  box-shadow: none !important;
+}
+
+/* ── Roles section ─────────────────────────────────────────── */
+.rolesSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Existing role item */
+.roleItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-sub);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  transition: border-color 0.15s;
+}
+.roleItem:hover { border-color: var(--border); }
+
+.roleItemName {
+  flex: 1;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.roleItemMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.roleGradePill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(34,197,94,0.2);
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.roleSlotsBadge {
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.roleDeleteBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.roleDeleteBtn:hover:not(:disabled) {
+  background: var(--danger-dim);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: var(--danger);
+}
+.roleDeleteBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Add-role form row */
+.roleAddRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  transition: border-color 0.15s;
+}
+.roleAddRow:focus-within { border-color: var(--border-focus); }
+
+.roleSelect {
+  flex: 1;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none !important;
+}
+.roleSelect:focus {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none !important;
+}
+
+.roleGradeInput {
+  width: 120px;
+  flex-shrink: 0;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none !important;
+}
+.roleGradeInput:focus {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none !important;
+}
+
+.slotsWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.slotsLabel {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.slotsInput { width: 68px; flex-shrink: 0; }
+
+.rolesEmpty {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 8px;
+}

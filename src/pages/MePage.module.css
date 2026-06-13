@@ -1,0 +1,146 @@
+.page {
+  max-width: 660px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 22px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--border-sub);
+}
+
+.avatarWrap {
+  flex-shrink: 0;
+  position: relative;
+}
+
+.fileInput {
+  display: none;
+}
+
+.avatarActions {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  display: flex;
+  gap: 4px;
+}
+
+.avatarUploadBtn,
+.avatarDeleteBtn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.avatarUploadBtn {
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+}
+.avatarUploadBtn:hover:not(:disabled) {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+}
+
+.avatarDeleteBtn {
+  background: var(--bg-surface);
+  color: var(--text-muted);
+}
+.avatarDeleteBtn:hover:not(:disabled) {
+  background: rgb(239 68 68 / 0.15);
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+.avatarUploadBtn:disabled,
+.avatarDeleteBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-top: 4px;
+}
+
+.username {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.4px;
+}
+
+.email {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+}
+
+.since {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.section {}
+
+.sectionTitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 12px;
+}
+
+.bioText {
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.skillList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.empty {
+  font-size: 13px;
+  color: var(--text-muted);
+}

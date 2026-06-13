@@ -1,0 +1,176 @@
+import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { projectsApi } from '@/shared/api/services'
+import type { Project, ProjectStatus } from '@/shared/types/api'
+import { Button } from '@/shared/ui/Button'
+import { Spinner } from '@/shared/ui/Spinner'
+import { Alert } from '@/shared/ui/Alert'
+import { EmptyState } from '@/shared/ui/EmptyState'
+import { isApiException } from '@/shared/api/error'
+import { PROJECT_STATUS_LABEL } from '@/shared/utils/constants'
+import { formatDate } from '@/shared/utils/date'
+import { ConfirmDeleteModal } from '@/shared/ui/ConfirmDeleteModal'
+import styles from './MyProjectsPage.module.css'
+
+function statusBadgeClass(status: ProjectStatus): string {
+  const map: Record<ProjectStatus, string> = {
+    draft: 'badge badge-default',
+    recruiting: 'badge badge-success',
+    completed: 'badge badge-warning',
+    banned: 'badge badge-danger',
+  }
+  return map[status] ?? 'badge badge-default'
+}
+
+export function MyProjectsPage() {
+  const navigate = useNavigate()
+  const [projects, setProjects] = useState<Project[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+  const projectToDelete = projects.find(p => p.id === confirmDeleteId) ?? null
+
+  useEffect(() => {
+    projectsApi.listMine()
+      .then(r => setProjects(r.items ?? []))
+      .catch(() => setError('Failed to load your projects'))
+      .finally(() => setLoading(false))
+  }, [])
+
+  async function handleDelete() {
+    if (!confirmDeleteId) return
+    const id = confirmDeleteId
+    setDeletingId(id)
+    try {
+      await projectsApi.delete(id)
+      setProjects(prev => prev.filter(p => p.id !== id))
+      setConfirmDeleteId(null)
+    } catch (e) {
+      if (isApiException(e)) setError(e.message)
+      else setError('Failed to delete project')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  if (loading) return <Spinner center />
+
+  return (
+    <div className={styles.page}>
+      {projectToDelete && (
+        <ConfirmDeleteModal
+          title="Delete project"
+          highlight={projectToDelete.title}
+          description="will be permanently deleted along with all its data. This action cannot be undone."
+          deleting={deletingId === confirmDeleteId}
+          onConfirm={handleDelete}
+          onClose={() => setConfirmDeleteId(null)}
+        />
+      )}
+
+      <div className={styles.header}>
+        <div>
+          <h1 className={styles.title}>My Projects</h1>
+          <p className={styles.subtitle}>Manage your project listings</p>
+        </div>
+        {projects.length > 0 && (
+          <Button variant="primary" size="sm" onClick={() => navigate('/projects/new', { state: { from: 'my-projects' } })}>
+            + New project
+          </Button>
+        )}
+      </div>
+
+      {error && <Alert type="error">{error}</Alert>}
+
+      {projects.length === 0 ? (
+        <EmptyState
+          title="No projects yet"
+          description="Create your first project and start recruiting"
+          action={<Button onClick={() => navigate('/projects/new', { state: { from: 'my-projects' } })}>Create project</Button>}
+        />
+      ) : (
+        <div className={styles.grid}>
+          {projects.map(project => {
+            const isBanned = project.status === 'banned'
+            return (
+              <Link
+                key={project.id}
+                to={`/projects/${project.id}`}
+                state={{ from: 'my-projects' }}
+                className={`${styles.card} ${isBanned ? styles.cardBanned : ''}`}
+              >
+                <div className={styles.cardHeader}>
+                  <span className={statusBadgeClass(project.status)}>
+                    {PROJECT_STATUS_LABEL[project.status]}
+                  </span>
+                  <span className={styles.date}>{formatDate(project.created_at)}</span>
+                </div>
+
+                <span className={styles.cardTitle}>{project.title}</span>
+
+                {isBanned && (
+                  <div className={styles.bannedNotice}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                    </svg>
+                    <span>
+                      {project.appeal_status === 'pending'
+                        ? 'Appeal under review'
+                        : project.appeal_status === 'rejected'
+                        ? 'Appeal rejected — open to resubmit'
+                        : 'Banned — open to see reason & appeal'}
+                    </span>
+                  </div>
+                )}
+
+                {!isBanned && <p className={styles.cardDesc}>{project.description}</p>}
+
+                {(project.tags ?? []).length > 0 && !isBanned && (
+                  <div className={styles.tagList}>
+                    {project.tags.slice(0, 4).map(t => (
+                      <span key={t.id} className="tag-chip">{t.name}</span>
+                    ))}
+                    {project.tags.length > 4 && (
+                      <span className="tag-chip">+{project.tags.length - 4}</span>
+                    )}
+                  </div>
+                )}
+
+                <div className={styles.cardActions} onClick={e => { e.preventDefault(); e.stopPropagation() }}>
+                  {!isBanned && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={e => { e.preventDefault(); e.stopPropagation(); navigate(`/projects/${project.id}/edit`, { state: { from: 'my-projects' } }) }}
+                    >
+                      Edit
+                    </Button>
+                  )}
+                  {!isBanned && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={e => { e.preventDefault(); e.stopPropagation(); navigate(`/projects/${project.id}/applications`, { state: { from: 'my-projects' } }) }}
+                    >
+                      Applications
+                    </Button>
+                  )}
+                  <div className={styles.deleteWrap}>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={e => { e.preventDefault(); e.stopPropagation(); setConfirmDeleteId(project.id) }}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}

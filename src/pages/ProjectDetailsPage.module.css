@@ -522,3 +522,89 @@
   padding-top: 4px;
 }
 
+/* ── Mobile responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .page {
+    max-width: 100%;
+    gap: 24px;
+  }
+
+  .title {
+    font-size: clamp(20px, 5vw, 28px);
+  }
+
+  .ownerActions {
+    gap: 8px;
+  }
+
+  .ownerActions > * {
+    min-height: 44px;
+  }
+
+  .roleGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .roleCard {
+    padding: 16px;
+  }
+
+  .banBanner {
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .banBannerActions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .appealBtn {
+    min-height: 44px;
+  }
+
+  .overlay {
+    padding: 16px;
+    align-items: flex-end;
+  }
+
+  .modal {
+    padding: 24px 20px;
+    width: calc(100% - 32px);
+    max-width: 100%;
+    border-radius: var(--radius);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modalActions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .modalActions > * {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    padding-bottom: 20px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+
+  .ownerActions {
+    flex-direction: column;
+  }
+
+  .ownerActions > * {
+    width: 100%;
+  }
+}
+

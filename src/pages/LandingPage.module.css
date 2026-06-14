@@ -98,6 +98,8 @@
   height: 26px;
   display: inline-flex;
   align-items: center;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .btnLocale:hover {
   color: #F8FAFC;
@@ -119,6 +121,7 @@
   transition: color 0.15s;
   display: inline-flex;
   align-items: center;
+  white-space: nowrap;
 }
 .btnGhost:hover { color: #F8FAFC; }
 
@@ -618,16 +621,17 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 12px;
+  padding: 4px 10px;
   border-radius: 99px;
   background: rgba(251, 191, 36, 0.08);
   border: 1px solid rgba(251, 191, 36, 0.2);
-  font-size: 11.5px;
+  font-size: 10.5px;
   font-weight: 600;
   color: #F59E0B;
   letter-spacing: 0.2px;
   position: relative;
   z-index: 1;
+  white-space: nowrap;
 }
 
 .ctaTitle {
@@ -720,7 +724,8 @@
 
 @media (max-width: 768px) {
   .header { padding: 0 20px; }
-  .btnGhost:first-child { display: none; }
+  /* Hide "Browse projects" ghost button — Save space */
+  .btnGhost:first-of-type { display: none; }
 
   .hero { padding: 120px 20px 64px; }
   .heroTitle { letter-spacing: -1.2px; }
@@ -738,6 +743,10 @@
   .heroActions, .ctaActions { flex-direction: column; width: 100%; }
   .btnHeroPrimary, .btnHeroSecondary { width: 100%; justify-content: center; }
   .features { grid-template-columns: 1fr; }
+  /* On very small screens keep only locale + Get Started */
+  .btnGhost { display: none; }
+  .btnLocale { min-height: 36px; height: 36px; padding: 4px 12px; }
+  .headerActions { gap: 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

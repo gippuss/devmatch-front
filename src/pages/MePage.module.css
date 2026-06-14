@@ -144,3 +144,63 @@
   font-size: 13px;
   color: var(--text-muted);
 }
+
+/* ── Mobile responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .page {
+    max-width: 100%;
+    gap: 24px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding-bottom: 20px;
+  }
+
+  .avatarWrap {
+    align-self: center;
+  }
+
+  .avatarUploadBtn,
+  .avatarDeleteBtn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .info {
+    width: 100%;
+    align-items: flex-start;
+    padding-top: 0;
+  }
+
+  .username {
+    font-size: 20px;
+  }
+
+  .form {
+    gap: 18px;
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .actions > * {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    align-items: center;
+    text-align: center;
+  }
+
+  .info {
+    align-items: center;
+  }
+}

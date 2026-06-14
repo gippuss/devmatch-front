@@ -144,3 +144,66 @@
 .cardActions button {
   min-width: 96px;
 }
+
+/* ── Mobile responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .page {
+    max-width: 100%;
+    gap: 20px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .cardTop {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .applicant {
+    gap: 10px;
+  }
+
+  .meta {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .cardActions {
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: 12px;
+  }
+
+  .cardActions button {
+    min-width: unset;
+    width: 100%;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 14px;
+  }
+
+  .applicantName {
+    font-size: 13.5px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+}

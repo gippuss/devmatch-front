@@ -204,3 +204,74 @@
   justify-content: flex-end;
   padding-top: 8px;
 }
+
+/* ── Mobile responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .page {
+    max-width: 100%;
+    gap: 24px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .form {
+    gap: 18px;
+  }
+
+  .roleAddRow {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 14px;
+  }
+
+  .roleSelect {
+    width: 100%;
+    flex: unset;
+  }
+
+  .roleGradeInput {
+    width: 100%;
+    flex-shrink: unset;
+  }
+
+  .slotsWrap {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .slotsInput {
+    width: 80px;
+  }
+
+  .roleItem {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .roleItemMeta {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .actions > * {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 20px;
+  }
+
+  .tagPicker {
+    padding: 10px 12px;
+  }
+}

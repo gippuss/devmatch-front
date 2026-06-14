@@ -354,3 +354,45 @@ button.tag-chip:hover:not(.active) {
   cursor: pointer;
 }
 .tag-chip button:hover { opacity: 1; }
+
+
+/* ── Mobile responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Ensure all buttons meet minimum 44px touch target */
+  .btn {
+    min-height: 44px;
+  }
+
+  .btn-sm {
+    min-height: 36px;
+    height: 36px;
+  }
+
+  .btn-lg {
+    min-height: 48px;
+  }
+
+  /* Inputs meet touch target height */
+  .input,
+  .select {
+    height: 44px;
+    font-size: 16px; /* prevents iOS auto-zoom */
+  }
+
+  .textarea {
+    font-size: 16px; /* prevents iOS auto-zoom */
+  }
+
+  /* Modal — full width on mobile */
+  .modal-mobile {
+    width: calc(100% - 32px);
+    max-width: 100%;
+    margin: 16px;
+    padding: 24px 20px;
+  }
+
+  /* Empty state — compact on mobile */
+  .empty-state {
+    padding: 48px 16px;
+  }
+}

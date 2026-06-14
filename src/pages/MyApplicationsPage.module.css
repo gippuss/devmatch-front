@@ -140,3 +140,46 @@
   padding-top: 4px;
   border-top: 1px solid var(--border-sub);
 }
+
+/* ── Mobile responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .page {
+    max-width: 100%;
+  }
+
+  .heading {
+    font-size: 20px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .cardTop {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .right {
+    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .status {
+    min-height: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 14px;
+  }
+
+  .projectTitle {
+    font-size: 14px;
+    white-space: normal;
+  }
+}

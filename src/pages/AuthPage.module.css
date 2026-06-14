@@ -111,3 +111,31 @@
   transition: opacity 0.15s;
 }
 .link:hover { opacity: 0.8; text-decoration: underline; }
+
+/* ── Mobile responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .page {
+    padding: 16px;
+    align-items: center;
+  }
+
+  .card {
+    padding: 36px 24px;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 28px 20px;
+    border-radius: var(--radius);
+  }
+
+  .title {
+    font-size: 20px;
+  }
+
+  .form {
+    gap: 14px;
+  }
+}

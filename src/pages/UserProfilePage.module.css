@@ -123,15 +123,41 @@
 }
 
 /* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .page {
+    max-width: 100%;
+    gap: 20px;
+  }
+
+  .card {
+    padding: 28px 20px;
+    gap: 20px;
+  }
+
+  .username {
+    font-size: 22px;
+  }
+}
+
 @media (max-width: 560px) {
   .card {
     flex-direction: column;
     align-items: center;
-    padding: 28px 20px;
+    padding: 24px 16px;
     text-align: center;
   }
 
   .skills {
     justify-content: center;
+  }
+
+  .meta {
+    justify-content: center;
+  }
+
+  .avatar {
+    width: 72px;
+    height: 72px;
+    font-size: 28px;
   }
 }

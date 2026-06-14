@@ -128,3 +128,246 @@
   margin: 0 auto;
   padding: 36px 28px 64px;
 }
+
+/* ── Hamburger button ─────────────────────────────────────────── */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.hamburger:hover { background: rgba(255,255,255,0.06); }
+
+.bar {
+  display: block;
+  width: 20px;
+  height: 1.5px;
+  background: var(--text-secondary);
+  border-radius: 2px;
+  transition: transform 0.22s ease, opacity 0.22s ease;
+  transform-origin: center;
+}
+.barTop  { transform: translateY(6.5px) rotate(45deg); }
+.barMid  { opacity: 0; transform: scaleX(0); }
+.barBot  { transform: translateY(-6.5px) rotate(-45deg); }
+
+/* ── Backdrop ─────────────────────────────────────────────────── */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 199;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: fadeIn 0.18s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Drawer ───────────────────────────────────────────────────── */
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 200;
+  width: 280px;
+  max-width: 85vw;
+  background: #0f1826;
+  border-left: 1px solid var(--border-sub);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+.drawerOpen { transform: translateX(0); }
+
+.drawerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: var(--nav-height);
+  border-bottom: 1px solid var(--border-sub);
+  flex-shrink: 0;
+}
+
+.drawerBrand {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.drawerClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  transition: color 0.15s, background 0.15s;
+}
+.drawerClose:hover {
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.06);
+}
+
+.drawerNav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.drawerLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 450;
+  color: var(--text-muted);
+  transition: color 0.15s, background 0.15s;
+  min-height: 44px;
+}
+.drawerLink:hover {
+  color: var(--text-secondary);
+  background: rgba(255,255,255,0.05);
+}
+.drawerLinkActive {
+  color: var(--text-primary) !important;
+  background: rgba(255,255,255,0.08) !important;
+}
+.drawerLinkAdmin {
+  color: rgba(239, 68, 68, 0.65) !important;
+}
+.drawerLinkAdmin:hover {
+  color: #EF4444 !important;
+  background: rgba(239, 68, 68, 0.08) !important;
+}
+.drawerLinkAdmin.drawerLinkActive {
+  color: #EF4444 !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+}
+
+.drawerIcon {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.drawerFooter {
+  padding: 16px 16px 32px;
+  border-top: 1px solid var(--border-sub);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.drawerUser {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.drawerSignOut {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-family: inherit;
+  padding: 10px 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  min-height: 44px;
+}
+.drawerSignOut:hover {
+  color: var(--text-secondary);
+  border-color: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.04);
+}
+
+.drawerAuthBtns {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.drawerAuthBtns > * { width: 100%; justify-content: center; min-height: 44px; }
+
+/* ── Mobile responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .nav {
+    padding: 0 16px;
+  }
+
+  .links {
+    display: none;
+  }
+
+  .brand {
+    margin-right: auto;
+  }
+
+  .actions {
+    gap: 4px;
+  }
+
+  .localeSwitcher {
+    height: 36px;
+    min-height: 36px;
+    padding: 4px 10px;
+  }
+
+  /* Hide sign in/up and sign out buttons — they're in the drawer */
+  .authBtns { display: none; }
+  .user .username { display: none; }
+  /* Keep sign out button visible on tablet, hide on small mobile */
+  .user { gap: 0; }
+
+  .hamburger {
+    display: flex;
+  }
+
+  .main {
+    padding: 20px 16px 48px;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav {
+    padding: 0 12px;
+  }
+
+  /* Hide sign out button too — it's in the drawer */
+  .user { display: none; }
+
+  .main {
+    padding: 16px 12px 40px;
+  }
+}

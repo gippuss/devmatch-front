@@ -301,7 +301,7 @@ export function ProjectDetailsPage() {
             </div>
             <h3 className={styles.modalTitle}>{t('projectDetail.banProject')}</h3>
             <p className={styles.modalSub}>
-              "<strong>{project.title}</strong>" {t('projectDetail.banSub').replace('{{title}}', project.title).split('"{{title}}"')[1] ?? t('projectDetail.banSub')}
+              "<strong>{project.title}</strong>" {t('projectDetail.banSub')}
             </p>
             {adminBanError && <Alert type="error">{adminBanError}</Alert>}
             <div className={styles.banReasonField}>

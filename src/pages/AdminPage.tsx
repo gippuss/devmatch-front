@@ -72,7 +72,7 @@ function BanModal({ project, onClose, onBanned, t }: {
         </div>
         <h3 className={styles.modalTitle}>{t('admin.banProject')}</h3>
         <p className={styles.modalSub}>
-          <strong>"{project.title}"</strong> {t('admin.banSub').replace('"{{title}}"', '').replace(/^"\s*/, '')}
+          <strong>"{project.title}"</strong> {t('admin.banSub')}
         </p>
 
         {error && <Alert type="error">{error}</Alert>}

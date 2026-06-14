@@ -17,10 +17,10 @@ import type {
 // Auth
 export const authApi = {
   register: (email: string, username: string, password: string) =>
-    apiClient.post<AuthResponse>('/api/v1/auth/register', { email, username, password }),
+    apiClient.postNoAuth<AuthResponse>('/api/v1/auth/register', { email, username, password }),
 
   login: (email: string, password: string) =>
-    apiClient.post<AuthResponse>('/api/v1/auth/login', { email, password }),
+    apiClient.postNoAuth<AuthResponse>('/api/v1/auth/login', { email, password }),
 
   refresh: (refresh_token: string) =>
     apiClient.post<AuthResponse>('/api/v1/auth/refresh', { refresh_token }),

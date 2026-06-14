@@ -41,7 +41,8 @@ export function LoginPage() {
       await login(email, password)
       navigate(from, { replace: true })
     } catch (err) {
-      if (isApiException(err)) setApiError(err.message)
+      if (isApiException(err) && err.status === 401) setApiError(t('auth.invalidCredentials'))
+      else if (isApiException(err)) setApiError(err.message)
       else setApiError(t('common.errorGeneric'))
     } finally {
       setLoading(false)

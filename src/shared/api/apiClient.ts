@@ -25,7 +25,7 @@ async function refreshTokens(): Promise<void> {
   authStorage.set(data.token.access_token, data.token.refresh_token)
 }
 
-async function request<T>(path: string, options: RequestInit = {}, retry = true, skipContentType = false): Promise<T> {
+async function request<T>(path: string, options: RequestInit = {}, retry = true, skipContentType = false, skipAuth = false): Promise<T> {
   const access = authStorage.getAccess()
   const headers: Record<string, string> = {
     ...(skipContentType ? {} : { 'Content-Type': 'application/json' }),
@@ -35,14 +35,14 @@ async function request<T>(path: string, options: RequestInit = {}, retry = true,
 
   const res = await fetch(`${BASE}${path}`, { ...options, headers })
 
-  if (res.status === 401 && retry) {
+  if (res.status === 401 && retry && !skipAuth) {
     if (!refreshPromise) {
       refreshPromise = refreshTokens().finally(() => {
         refreshPromise = null
       })
     }
     await refreshPromise
-    return request<T>(path, options, false, skipContentType)
+    return request<T>(path, options, false, skipContentType, skipAuth)
   }
 
   if (res.status === 204) return undefined as T
@@ -62,6 +62,8 @@ export const apiClient = {
   get: <T>(path: string) => request<T>(path),
   post: <T>(path: string, data?: unknown) =>
     request<T>(path, { method: 'POST', body: data !== undefined ? JSON.stringify(data) : undefined }),
+  postNoAuth: <T>(path: string, data?: unknown) =>
+    request<T>(path, { method: 'POST', body: data !== undefined ? JSON.stringify(data) : undefined }, true, false, true),
   postForm: <T>(path: string, form: FormData) =>
     request<T>(path, { method: 'POST', body: form }, true, true),
   patch: <T>(path: string, data?: unknown) =>

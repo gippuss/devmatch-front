@@ -1,10 +1,12 @@
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/features/auth/AuthContext'
+import { useLocale } from '@/shared/i18n/LocaleContext'
 import { Button } from '@/shared/ui/Button'
 import styles from './AppLayout.module.css'
 
 export function AppLayout() {
   const { user, logout } = useAuth()
+  const { t, locale, setLocale } = useLocale()
   const navigate = useNavigate()
   const location = useLocation()
   const state = location.state as { from?: string } | null
@@ -38,7 +40,7 @@ export function AppLayout() {
                 return `${styles.link} ${active ? styles.active : ''}`
               }}
             >
-              Projects
+              {t('nav.projects')}
             </NavLink>
             {user && (
               <>
@@ -46,41 +48,49 @@ export function AppLayout() {
                   to="/my-projects"
                   className={({ isActive }) => `${styles.link} ${(isActive || fromMyProjects) ? styles.active : ''}`}
                 >
-                  My Projects
+                  {t('nav.myProjects')}
                 </NavLink>
                 <NavLink
                   to="/my-applications"
                   className={({ isActive }) => `${styles.link} ${(isActive || fromMyApplications) ? styles.active : ''}`}
                 >
-                  My Applications
+                  {t('nav.myApplications')}
                 </NavLink>
                 <NavLink
                   to="/me"
                   className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}
                 >
-                  Profile
+                  {t('nav.profile')}
                 </NavLink>
                 {user.is_admin && (
                   <NavLink
                     to="/admin"
                     className={({ isActive }) => `${styles.link} ${styles.adminLink} ${(isActive || fromAdmin) ? styles.active : ''}`}
                   >
-                    Admin
+                    {t('nav.admin')}
                   </NavLink>
                 )}
               </>
             )}
           </div>
           <div className={styles.actions}>
+            <button
+              type="button"
+              className={styles.localeSwitcher}
+              onClick={() => setLocale(locale === 'en' ? 'ru' : 'en')}
+              aria-label="Switch language"
+            >
+              {locale === 'en' ? 'RU' : 'EN'}
+            </button>
             {user ? (
               <div className={styles.user}>
                 <span className={styles.username}>{user.username}</span>
-                <Button variant="ghost" size="sm" onClick={handleLogout}>Sign out</Button>
+                <Button variant="ghost" size="sm" onClick={handleLogout}>{t('nav.signOut')}</Button>
               </div>
             ) : (
               <div className={styles.authBtns}>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>Sign in</Button>
-                <Button variant="primary" size="sm" onClick={() => navigate('/register')}>Sign up</Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>{t('nav.signIn')}</Button>
+                <Button variant="primary" size="sm" onClick={() => navigate('/register')}>{t('nav.signUp')}</Button>
               </div>
             )}
           </div>

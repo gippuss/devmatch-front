@@ -7,9 +7,11 @@ import { Input } from '@/shared/ui/Input'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { Alert } from '@/shared/ui/Alert'
 import { formatDate } from '@/shared/utils/date'
+import { useLocale } from '@/shared/i18n/LocaleContext'
 import styles from './ProjectsPage.module.css'
 
 export function ProjectsPage() {
+  const { t } = useLocale()
   const [projects, setProjects] = useState<Project[]>([])
   const [tags, setTags] = useState<Tag[]>([])
   const [loading, setLoading] = useState(true)
@@ -29,19 +31,19 @@ export function ProjectsPage() {
       })
       setProjects(res.items ?? [])
     } catch {
-      setError('Failed to load projects')
+      setError(t('projects.failedToLoad'))
     } finally {
       setLoading(false)
     }
-  }, [query, selectedTagIds])
+  }, [query, selectedTagIds, t])
 
   useEffect(() => {
     dictionariesApi.getSystemTags().then(r => setTags(r.items ?? [])).catch(() => {})
   }, [])
 
   useEffect(() => {
-    const t = setTimeout(fetchProjects, 300)
-    return () => clearTimeout(t)
+    const timer = setTimeout(fetchProjects, 300)
+    return () => clearTimeout(timer)
   }, [fetchProjects])
 
   function toggleTag(id: number) {
@@ -54,14 +56,14 @@ export function ProjectsPage() {
     <div className={styles.page}>
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>Projects</h1>
-          <p className={styles.subtitle}>Find a project and join a team</p>
+          <h1 className={styles.title}>{t('projects.title')}</h1>
+          <p className={styles.subtitle}>{t('projects.subtitle')}</p>
         </div>
       </div>
 
       <div className={styles.filters}>
         <Input
-          placeholder="Search projects..."
+          placeholder={t('projects.searchPlaceholder')}
           value={query}
           onChange={e => setQuery(e.target.value)}
           className={styles.search}
@@ -88,21 +90,25 @@ export function ProjectsPage() {
         <Spinner center />
       ) : projects.length === 0 ? (
         <EmptyState
-          title="No open projects"
-          description="There are no projects recruiting right now. Check back later or create your own."
+          title={t('projects.emptyTitle')}
+          description={t('projects.emptyDesc')}
         />
       ) : (
         <div className={styles.grid}>
           {projects.map(project => {
             const roles = project.roles ?? []
             const openRoles = roles.filter(r => r.slots_filled < r.slots_total)
+            const openCount = openRoles.length
+            const openLabel = openCount === 1
+              ? t('projects.openRole').replace('{{count}}', String(openCount))
+              : t('projects.openRoles').replace('{{count}}', String(openCount))
             return (
               <Link key={project.id} to={`/projects/${project.id}`} className={styles.card}>
                 <div className={styles.cardHeader}>
                   <span className={styles.date}>{formatDate(project.created_at)}</span>
-                  {openRoles.length > 0 && (
+                  {openCount > 0 && (
                     <span className={styles.rolesChip}>
-                      {openRoles.length} open role{openRoles.length !== 1 ? 's' : ''}
+                      {openLabel}
                     </span>
                   )}
                 </div>
@@ -110,8 +116,8 @@ export function ProjectsPage() {
                 <p className={styles.cardDesc}>{project.description}</p>
                 <div className={styles.cardFooter}>
                   <div className={styles.tagList}>
-                    {(project.tags ?? []).slice(0, 4).map(t => (
-                      <span key={t.id} className="tag-chip">{t.name}</span>
+                    {(project.tags ?? []).slice(0, 4).map(tg => (
+                      <span key={tg.id} className="tag-chip">{tg.name}</span>
                     ))}
                     {(project.tags ?? []).length > 4 && (
                       <span className="tag-chip">+{project.tags.length - 4}</span>

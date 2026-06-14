@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/features/auth/AuthContext'
+import { useLocale } from '@/shared/i18n/LocaleContext'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import { FormField } from '@/shared/ui/FormField'
@@ -10,6 +11,7 @@ import styles from './AuthPage.module.css'
 
 export function LoginPage() {
   const { login } = useAuth()
+  const { t } = useLocale()
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as { from?: string })?.from ?? '/projects'
@@ -22,9 +24,9 @@ export function LoginPage() {
 
   function validate() {
     const e: typeof errors = {}
-    if (!email.trim()) e.email = 'Email is required'
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) e.email = 'Enter a valid email'
-    if (!password) e.password = 'Password is required'
+    if (!email.trim()) e.email = t('auth.emailRequired')
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) e.email = t('auth.emailInvalid')
+    if (!password) e.password = t('auth.passwordRequired')
     return e
   }
 
@@ -40,7 +42,7 @@ export function LoginPage() {
       navigate(from, { replace: true })
     } catch (err) {
       if (isApiException(err)) setApiError(err.message)
-      else setApiError('Something went wrong')
+      else setApiError(t('common.errorGeneric'))
     } finally {
       setLoading(false)
     }
@@ -50,16 +52,16 @@ export function LoginPage() {
     <div className={styles.page}>
       <div className={styles.card}>
         <Link to="/projects" className={styles.logo}>DevMatch</Link>
-        <h1 className={styles.title}>Sign in</h1>
-        <p className={styles.subtitle}>Find your next pet project team</p>
+        <h1 className={styles.title}>{t('auth.signInTitle')}</h1>
+        <p className={styles.subtitle}>{t('auth.signInSubtitle')}</p>
 
         <form className={styles.form} onSubmit={handleSubmit} noValidate>
           {apiError && <Alert type="error">{apiError}</Alert>}
 
-          <FormField label="Email" error={errors.email}>
+          <FormField label={t('auth.emailLabel')} error={errors.email}>
             <Input
               type="email"
-              placeholder="you@example.com"
+              placeholder={t('auth.emailPlaceholder')}
               value={email}
               onChange={e => { setEmail(e.target.value); setErrors(p => ({ ...p, email: undefined })) }}
               error={!!errors.email}
@@ -67,22 +69,22 @@ export function LoginPage() {
             />
           </FormField>
 
-          <FormField label="Password" error={errors.password}>
+          <FormField label={t('auth.passwordLabel')} error={errors.password}>
             <Input
               type="password"
-              placeholder="••••••••"
+              placeholder={t('auth.passwordPlaceholder')}
               value={password}
               onChange={e => { setPassword(e.target.value); setErrors(p => ({ ...p, password: undefined })) }}
               error={!!errors.password}
             />
           </FormField>
 
-          <Button type="submit" full loading={loading}>Sign in</Button>
+          <Button type="submit" full loading={loading}>{t('auth.signInBtn')}</Button>
         </form>
 
         <p className={styles.footer}>
-          Don't have an account?{' '}
-          <Link to="/register" className={styles.link}>Create one</Link>
+          {t('auth.noAccount')}{' '}
+          <Link to="/register" className={styles.link}>{t('auth.createOne')}</Link>
         </p>
       </div>
     </div>

@@ -7,16 +7,10 @@ import { Alert } from '@/shared/ui/Alert'
 import { ConfirmDeleteModal } from '@/shared/ui/ConfirmDeleteModal'
 import { isApiException } from '@/shared/api/error'
 import { formatDate } from '@/shared/utils/date'
+import { useLocale } from '@/shared/i18n/LocaleContext'
 import styles from './AdminPage.module.css'
 
-const STATUS_LABEL: Record<ProjectStatus, string> = {
-  draft: 'Draft',
-  recruiting: 'Recruiting',
-  completed: 'Completed',
-  banned: 'Banned',
-}
-
-function StatusBadge({ status }: { status: ProjectStatus }) {
+function StatusBadge({ status, label }: { status: ProjectStatus; label: string }) {
   const cls =
     status === 'recruiting' ? styles.badgeRecruiting
     : status === 'completed' ? styles.badgeCompleted
@@ -32,7 +26,7 @@ function StatusBadge({ status }: { status: ProjectStatus }) {
   return (
     <span className={cls}>
       <svg width="6" height="6" viewBox="0 0 6 6" fill={dot}><circle cx="3" cy="3" r="3" /></svg>
-      {STATUS_LABEL[status]}
+      {label}
     </span>
   )
 }
@@ -41,10 +35,11 @@ function getInitials(name: string) {
   return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
 }
 
-function BanModal({ project, onClose, onBanned }: {
+function BanModal({ project, onClose, onBanned, t }: {
   project: Project
   onClose: () => void
   onBanned: (updated: Project) => void
+  t: (key: string) => string
 }) {
   const [reason, setReason] = useState('')
   const [loading, setLoading] = useState(false)
@@ -54,14 +49,14 @@ function BanModal({ project, onClose, onBanned }: {
   useEffect(() => { textareaRef.current?.focus() }, [])
 
   async function handleBan() {
-    if (reason.trim().length < 5) { setError('Reason must be at least 5 characters'); return }
+    if (reason.trim().length < 5) { setError(t('admin.banReasonMin') || 'Reason must be at least 5 characters'); return }
     setLoading(true)
     setError('')
     try {
       const updated = await adminApi.banProject(project.id, reason.trim())
       onBanned(updated)
     } catch (e) {
-      setError(isApiException(e) ? e.message : 'Failed to ban project')
+      setError(isApiException(e) ? e.message : t('admin.failedToBan'))
     } finally {
       setLoading(false)
     }
@@ -75,20 +70,20 @@ function BanModal({ project, onClose, onBanned }: {
             <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
           </svg>
         </div>
-        <h3 className={styles.modalTitle}>Ban project</h3>
+        <h3 className={styles.modalTitle}>{t('admin.banProject')}</h3>
         <p className={styles.modalSub}>
-          <strong>"{project.title}"</strong> will be hidden from all users. The owner will see the reason and can submit an appeal.
+          <strong>"{project.title}"</strong> {t('admin.banSub').replace('"{{title}}"', '').replace(/^"\s*/, '')}
         </p>
 
         {error && <Alert type="error">{error}</Alert>}
 
         <div className={styles.modalField}>
-          <label className={styles.modalLabel}>Reason for ban</label>
+          <label className={styles.modalLabel}>{t('admin.banReason')}</label>
           <textarea
             ref={textareaRef}
             className={styles.modalTextarea}
             rows={4}
-            placeholder="Describe why this project violates the rules..."
+            placeholder={t('admin.banReasonPlaceholder')}
             value={reason}
             onChange={e => setReason(e.target.value)}
             maxLength={500}
@@ -97,9 +92,9 @@ function BanModal({ project, onClose, onBanned }: {
         </div>
 
         <div className={styles.modalActions}>
-          <button type="button" className={styles.modalCancel} onClick={onClose}>Cancel</button>
+          <button type="button" className={styles.modalCancel} onClick={onClose}>{t('admin.modalCancel')}</button>
           <button type="button" className={styles.modalBanBtn} onClick={handleBan} disabled={loading}>
-            {loading ? 'Banning…' : 'Ban project'}
+            {loading ? t('admin.banning') : t('admin.banBtn')}
           </button>
         </div>
       </div>
@@ -108,6 +103,7 @@ function BanModal({ project, onClose, onBanned }: {
 }
 
 export function AdminPage() {
+  const { t } = useLocale()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -124,12 +120,19 @@ export function AdminPage() {
 
   const projectToDelete = projects.find(p => p.id === confirmDeleteId) ?? null
 
+  const statusLabel: Record<ProjectStatus, string> = {
+    draft: t('status.draft'),
+    recruiting: t('status.recruiting'),
+    completed: t('status.completed'),
+    banned: t('status.banned'),
+  }
+
   useEffect(() => {
     adminApi.listProjects({ limit: 100 })
       .then(r => setProjects(r.items ?? []))
-      .catch(() => setError('Failed to load projects'))
+      .catch(() => setError(t('admin.failedToDelete')))
       .finally(() => setLoading(false))
-  }, [])
+  }, [t])
 
   const filtered = useMemo(() => {
     let list = projects
@@ -167,7 +170,7 @@ export function AdminPage() {
       setConfirmDeleteId(null)
     } catch (e) {
       if (isApiException(e)) setError(e.message)
-      else setError('Failed to delete project')
+      else setError(t('admin.failedToDelete'))
     } finally {
       setDeleting(false)
     }
@@ -179,7 +182,7 @@ export function AdminPage() {
       const updated = await adminApi.unbanProject(project.id)
       updateProject(updated)
     } catch (e) {
-      setError(isApiException(e) ? e.message : 'Failed to unban project')
+      setError(isApiException(e) ? e.message : t('admin.failedToUnban'))
     } finally {
       setUnbanning(null)
     }
@@ -191,7 +194,7 @@ export function AdminPage() {
       const updated = await adminApi.reviewAppeal(project.id, true)
       updateProject(updated)
     } catch (e) {
-      setError(isApiException(e) ? e.message : 'Failed to approve appeal')
+      setError(isApiException(e) ? e.message : t('admin.failedToApproveAppeal'))
     } finally {
       setReviewing(null)
     }
@@ -206,7 +209,7 @@ export function AdminPage() {
       setRejectTarget(null)
       setRejectNewBanReason('')
     } catch (e) {
-      setError(isApiException(e) ? e.message : 'Failed to reject appeal')
+      setError(isApiException(e) ? e.message : t('admin.failedToRejectAppeal'))
     } finally {
       setRejectLoading(false)
     }
@@ -218,9 +221,9 @@ export function AdminPage() {
     <div className={styles.page}>
       {projectToDelete && (
         <ConfirmDeleteModal
-          title="Delete project"
+          title={t('admin.deleteTitle')}
           highlight={projectToDelete.title}
-          description="will be permanently deleted along with all roles and applications. This action cannot be undone."
+          description={t('admin.deleteDesc')}
           deleting={deleting}
           onConfirm={handleDelete}
           onClose={() => setConfirmDeleteId(null)}
@@ -232,6 +235,7 @@ export function AdminPage() {
           project={banTarget}
           onClose={() => setBanTarget(null)}
           onBanned={updated => { updateProject(updated); setBanTarget(null) }}
+          t={t}
         />
       )}
 
@@ -244,22 +248,22 @@ export function AdminPage() {
                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
               </svg>
             </div>
-            <h3 className={styles.modalTitle}>Reject appeal</h3>
+            <h3 className={styles.modalTitle}>{t('admin.rejectAppealTitle')}</h3>
             <p className={styles.modalSub}>
-              Project stays banned. You can update the ban reason for <strong>{rejectTarget.owner?.username}</strong>.
+              {t('admin.rejectAppealSub').replace('{{owner}}', rejectTarget.owner?.username ?? '')}
             </p>
             {rejectTarget.appeal_comment && (
               <div className={styles.ownerAppealComment}>
-                <span className={styles.ownerAppealCommentLabel}>Owner's message:</span>
+                <span className={styles.ownerAppealCommentLabel}>{t('admin.ownerMsg')}</span>
                 <p>{rejectTarget.appeal_comment}</p>
               </div>
             )}
             <div className={styles.modalField}>
-              <label className={styles.modalLabel}>Updated ban reason (optional)</label>
+              <label className={styles.modalLabel}>{t('admin.updatedBanReason')}</label>
               <textarea
                 className={styles.modalTextarea}
                 rows={2}
-                placeholder={rejectTarget.ban_reason || 'Leave blank to keep current reason…'}
+                placeholder={rejectTarget.ban_reason || t('admin.keepCurrentReason')}
                 value={rejectNewBanReason}
                 onChange={e => setRejectNewBanReason(e.target.value)}
                 maxLength={500}
@@ -268,9 +272,9 @@ export function AdminPage() {
               <span className={styles.charCount}>{rejectNewBanReason.length}/500</span>
             </div>
             <div className={styles.modalActions}>
-              <button type="button" className={styles.modalCancel} onClick={() => { setRejectTarget(null); setRejectNewBanReason('') }}>Cancel</button>
+              <button type="button" className={styles.modalCancel} onClick={() => { setRejectTarget(null); setRejectNewBanReason('') }}>{t('admin.modalCancel')}</button>
               <button type="button" className={styles.modalBanBtn} onClick={handleRejectAppeal} disabled={rejectLoading}>
-                {rejectLoading ? 'Rejecting…' : 'Reject appeal'}
+                {rejectLoading ? t('admin.rejecting') : t('admin.rejectAppealBtn')}
               </button>
             </div>
           </div>
@@ -286,8 +290,8 @@ export function AdminPage() {
             </svg>
           </div>
           <div className={styles.titleGroup}>
-            <h1 className={styles.title}>Admin Panel</h1>
-            <p className={styles.subtitle}>Manage all platform listings</p>
+            <h1 className={styles.title}>{t('admin.title')}</h1>
+            <p className={styles.subtitle}>{t('admin.subtitle')}</p>
           </div>
         </div>
       </div>
@@ -301,7 +305,7 @@ export function AdminPage() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
             </div>
           </div>
-          <div className={styles.statBottom}><span className={styles.statLabel}>Total Projects</span></div>
+          <div className={styles.statBottom}><span className={styles.statLabel}>{t('admin.statTotal')}</span></div>
         </button>
 
         <button type="button" className={`${styles.stat} ${styles.green} ${statusFilter === 'recruiting' ? styles.statActive : ''}`} onClick={() => setStatusFilter(statusFilter === 'recruiting' ? 'all' : 'recruiting')} aria-pressed={statusFilter === 'recruiting'}>
@@ -311,7 +315,7 @@ export function AdminPage() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </div>
           </div>
-          <div className={styles.statBottom}><span className={styles.statLabel}>Recruiting</span></div>
+          <div className={styles.statBottom}><span className={styles.statLabel}>{t('admin.statRecruiting')}</span></div>
         </button>
 
         <button type="button" className={`${styles.stat} ${styles.amber} ${statusFilter === 'completed' ? styles.statActive : ''}`} onClick={() => setStatusFilter(statusFilter === 'completed' ? 'all' : 'completed')} aria-pressed={statusFilter === 'completed'}>
@@ -321,7 +325,7 @@ export function AdminPage() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
           </div>
-          <div className={styles.statBottom}><span className={styles.statLabel}>Completed</span></div>
+          <div className={styles.statBottom}><span className={styles.statLabel}>{t('admin.statCompleted')}</span></div>
         </button>
 
         <button type="button" className={`${styles.stat} ${styles.slate} ${statusFilter === 'draft' ? styles.statActive : ''}`} onClick={() => setStatusFilter(statusFilter === 'draft' ? 'all' : 'draft')} aria-pressed={statusFilter === 'draft'}>
@@ -331,7 +335,7 @@ export function AdminPage() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </div>
           </div>
-          <div className={styles.statBottom}><span className={styles.statLabel}>Draft</span></div>
+          <div className={styles.statBottom}><span className={styles.statLabel}>{t('admin.statDraft')}</span></div>
         </button>
 
         <button type="button" className={`${styles.stat} ${styles.red} ${statusFilter === 'banned' ? styles.statActive : ''}`} onClick={() => setStatusFilter(statusFilter === 'banned' ? 'all' : 'banned')} aria-pressed={statusFilter === 'banned'}>
@@ -342,8 +346,14 @@ export function AdminPage() {
             </div>
           </div>
           <div className={styles.statBottom}>
-            <span className={styles.statLabel}>Banned</span>
-            {counts.pending > 0 && <span className={styles.appealBadge}>{counts.pending} appeal{counts.pending > 1 ? 's' : ''}</span>}
+            <span className={styles.statLabel}>{t('admin.statBanned')}</span>
+            {counts.pending > 0 && (
+              <span className={styles.appealBadge}>
+                {counts.pending === 1
+                  ? t('admin.appealSuffix').replace('{{count}}', String(counts.pending))
+                  : t('admin.appealsSuffix').replace('{{count}}', String(counts.pending))}
+              </span>
+            )}
           </div>
         </button>
       </div>
@@ -361,10 +371,10 @@ export function AdminPage() {
           <input
             className={styles.searchInput}
             type="search"
-            placeholder="Search by title, owner or description…"
+            placeholder={t('admin.searchPlaceholder')}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            aria-label="Search projects"
+            aria-label={t('admin.searchLabel')}
           />
         </div>
         {statusFilter !== 'all' && (
@@ -372,7 +382,7 @@ export function AdminPage() {
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
-            Clear filter
+            {t('admin.clearFilter')}
           </button>
         )}
       </div>
@@ -386,18 +396,22 @@ export function AdminPage() {
                 <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
               </svg>
             </div>
-            <p className={styles.emptyTitle}>No projects found</p>
-            <p className={styles.emptyDesc}>{search ? `No results for "${search}"` : 'No projects match this filter'}</p>
+            <p className={styles.emptyTitle}>{t('admin.emptyTitle')}</p>
+            <p className={styles.emptyDesc}>
+              {search
+                ? t('admin.emptyDescSearch').replace('{{query}}', search)
+                : t('admin.emptyDescFilter')}
+            </p>
           </div>
         ) : (
-          <table className={styles.table} role="table" aria-label="All projects">
+          <table className={styles.table} role="table" aria-label={t('admin.searchLabel')}>
             <thead>
               <tr>
-                <th className={styles.colTitle}>Project</th>
-                <th className={styles.colOwner}>Owner</th>
-                <th className={styles.colStatus}>Status</th>
-                <th className={styles.colApps}>Applications</th>
-                <th className={styles.colDate}>Created</th>
+                <th className={styles.colTitle}>{t('admin.colProject')}</th>
+                <th className={styles.colOwner}>{t('admin.colOwner')}</th>
+                <th className={styles.colStatus}>{t('admin.colStatus')}</th>
+                <th className={styles.colApps}>{t('admin.colApplications')}</th>
+                <th className={styles.colDate}>{t('admin.colCreated')}</th>
                 <th className={styles.colActions} aria-label="Actions"></th>
               </tr>
             </thead>
@@ -409,11 +423,11 @@ export function AdminPage() {
                       {project.title}
                     </Link>
                     {project.appeal_status === 'pending' && (
-                      <span className={styles.appealPendingBadge}>Appeal pending</span>
+                      <span className={styles.appealPendingBadge}>{t('admin.appealPending')}</span>
                     )}
                     {(project.tags ?? []).length > 0 && (
                       <div className={styles.projectTags}>
-                        {project.tags.slice(0, 3).map(t => <span key={t.id} className="tag-chip">{t.name}</span>)}
+                        {project.tags.slice(0, 3).map(tg => <span key={tg.id} className="tag-chip">{tg.name}</span>)}
                         {project.tags.length > 3 && <span className="tag-chip">+{project.tags.length - 3}</span>}
                       </div>
                     )}
@@ -428,7 +442,9 @@ export function AdminPage() {
                       <span className={styles.ownerName}>{project.owner?.username ?? '—'}</span>
                     </div>
                   </td>
-                  <td className={styles.colStatus}><StatusBadge status={project.status} /></td>
+                  <td className={styles.colStatus}>
+                    <StatusBadge status={project.status} label={statusLabel[project.status]} />
+                  </td>
                   <td className={styles.colApps}>
                     <div className={styles.appsCell}>
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -441,7 +457,6 @@ export function AdminPage() {
                   <td className={styles.colDate}>{formatDate(project.created_at)}</td>
                   <td className={styles.colActions}>
                     <div className={styles.actionBtns}>
-                      {/* Appeal review buttons */}
                       {project.appeal_status === 'pending' && (
                         <>
                           <button
@@ -449,7 +464,7 @@ export function AdminPage() {
                             className={styles.approveBtn}
                             onClick={() => handleApproveAppeal(project)}
                             disabled={reviewing === project.id}
-                            title="Approve appeal — unban project"
+                            title={t('admin.approveTitle')}
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                           </button>
@@ -457,21 +472,20 @@ export function AdminPage() {
                             type="button"
                             className={styles.rejectBtn}
                             onClick={() => { setRejectTarget(project); setRejectNewBanReason('') }}
-                            title="Reject appeal — keep banned"
+                            title={t('admin.rejectTitle')}
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                           </button>
                         </>
                       )}
-                      {/* Ban / Unban — hidden when appeal is pending (use approve/reject instead) */}
                       {project.appeal_status !== 'pending' && (
                         project.status !== 'banned' ? (
                           <button
                             type="button"
                             className={styles.banBtn}
                             onClick={() => setBanTarget(project)}
-                            title="Ban project"
-                            aria-label={`Ban project ${project.title}`}
+                            title={t('admin.banTitle')}
+                            aria-label={`${t('admin.banTitle')} ${project.title}`}
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
                           </button>
@@ -481,8 +495,8 @@ export function AdminPage() {
                             className={`${styles.banBtn} ${styles.banBtnActive}`}
                             onClick={() => handleUnban(project)}
                             disabled={unbanning === project.id}
-                            title="Unban project"
-                            aria-label={`Unban project ${project.title}`}
+                            title={t('admin.unbanTitle')}
+                            aria-label={`${t('admin.unbanTitle')} ${project.title}`}
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                           </button>
@@ -492,8 +506,8 @@ export function AdminPage() {
                         type="button"
                         className={styles.deleteBtn}
                         onClick={() => setConfirmDeleteId(project.id)}
-                        aria-label={`Delete project ${project.title}`}
-                        title="Delete project"
+                        aria-label={`${t('admin.deleteTitle2')} ${project.title}`}
+                        title={t('admin.deleteTitle2')}
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <polyline points="3 6 5 6 21 6"/>

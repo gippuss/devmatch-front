@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth/AuthContext'
+import { useLocale } from '@/shared/i18n/LocaleContext'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import { FormField } from '@/shared/ui/FormField'
@@ -10,6 +11,7 @@ import styles from './AuthPage.module.css'
 
 export function RegisterPage() {
   const { register } = useAuth()
+  const { t } = useLocale()
   const navigate = useNavigate()
 
   const [email, setEmail] = useState('')
@@ -21,13 +23,13 @@ export function RegisterPage() {
 
   function validate() {
     const e: typeof errors = {}
-    if (!email.trim()) e.email = 'Email is required'
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) e.email = 'Enter a valid email'
-    if (!username.trim()) e.username = 'Username is required'
-    else if (username.trim().length < 2) e.username = 'At least 2 characters'
-    else if (username.trim().length > 64) e.username = 'Max 64 characters'
-    if (!password) e.password = 'Password is required'
-    else if (password.length < 8) e.password = 'At least 8 characters'
+    if (!email.trim()) e.email = t('auth.emailRequired')
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) e.email = t('auth.emailInvalid')
+    if (!username.trim()) e.username = t('auth.usernameRequired')
+    else if (username.trim().length < 2) e.username = t('auth.usernameMin')
+    else if (username.trim().length > 64) e.username = t('auth.usernameMax')
+    if (!password) e.password = t('auth.passwordRequired')
+    else if (password.length < 8) e.password = t('auth.passwordMin')
     return e
   }
 
@@ -43,7 +45,7 @@ export function RegisterPage() {
       navigate('/projects', { replace: true })
     } catch (err) {
       if (isApiException(err)) setApiError(err.message)
-      else setApiError('Something went wrong')
+      else setApiError(t('common.errorGeneric'))
     } finally {
       setLoading(false)
     }
@@ -53,16 +55,16 @@ export function RegisterPage() {
     <div className={styles.page}>
       <div className={styles.card}>
         <Link to="/projects" className={styles.logo}>DevMatch</Link>
-        <h1 className={styles.title}>Create account</h1>
-        <p className={styles.subtitle}>Join and find your team</p>
+        <h1 className={styles.title}>{t('auth.createAccountTitle')}</h1>
+        <p className={styles.subtitle}>{t('auth.createAccountSubtitle')}</p>
 
         <form className={styles.form} onSubmit={handleSubmit} noValidate>
           {apiError && <Alert type="error">{apiError}</Alert>}
 
-          <FormField label="Email" error={errors.email}>
+          <FormField label={t('auth.emailLabel')} error={errors.email}>
             <Input
               type="email"
-              placeholder="you@example.com"
+              placeholder={t('auth.emailPlaceholder')}
               value={email}
               onChange={e => { setEmail(e.target.value); setErrors(p => ({ ...p, email: undefined })) }}
               error={!!errors.email}
@@ -70,10 +72,10 @@ export function RegisterPage() {
             />
           </FormField>
 
-          <FormField label="Username" hint="2–64 characters" error={errors.username}>
+          <FormField label={t('auth.usernameLabel')} hint={t('auth.usernameHint')} error={errors.username}>
             <Input
               type="text"
-              placeholder="johndoe"
+              placeholder={t('auth.usernamePlaceholder')}
               value={username}
               onChange={e => { setUsername(e.target.value); setErrors(p => ({ ...p, username: undefined })) }}
               error={!!errors.username}
@@ -81,22 +83,22 @@ export function RegisterPage() {
             />
           </FormField>
 
-          <FormField label="Password" hint="At least 8 characters" error={errors.password}>
+          <FormField label={t('auth.passwordLabel')} hint={t('auth.passwordHint')} error={errors.password}>
             <Input
               type="password"
-              placeholder="••••••••"
+              placeholder={t('auth.passwordPlaceholder')}
               value={password}
               onChange={e => { setPassword(e.target.value); setErrors(p => ({ ...p, password: undefined })) }}
               error={!!errors.password}
             />
           </FormField>
 
-          <Button type="submit" full loading={loading}>Create account</Button>
+          <Button type="submit" full loading={loading}>{t('auth.createAccountBtn')}</Button>
         </form>
 
         <p className={styles.footer}>
-          Already have an account?{' '}
-          <Link to="/login" className={styles.link}>Sign in</Link>
+          {t('auth.alreadyHaveAccount')}{' '}
+          <Link to="/login" className={styles.link}>{t('auth.signInLink')}</Link>
         </p>
       </div>
     </div>

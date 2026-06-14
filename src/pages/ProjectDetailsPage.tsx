@@ -4,6 +4,7 @@ import { projectsApi, applicationsApi, adminApi, appealApi } from '@/shared/api/
 import type { Application, ApplicationWithRole } from '@/shared/types/api'
 import type { Project, ProjectRole } from '@/shared/types/api'
 import { useAuth } from '@/features/auth/AuthContext'
+import { useLocale } from '@/shared/i18n/LocaleContext'
 import { Button } from '@/shared/ui/Button'
 import { Spinner } from '@/shared/ui/Spinner'
 import { Alert } from '@/shared/ui/Alert'
@@ -11,7 +12,6 @@ import { FormField } from '@/shared/ui/FormField'
 import { Textarea } from '@/shared/ui/Textarea'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { isApiException } from '@/shared/api/error'
-import { PROJECT_STATUS_LABEL } from '@/shared/utils/constants'
 import { formatDate } from '@/shared/utils/date'
 import type { ProjectStatus } from '@/shared/types/api'
 import { ConfirmDeleteModal } from '@/shared/ui/ConfirmDeleteModal'
@@ -36,13 +36,14 @@ function ApplyModal({
   onClose: () => void
   onSuccess: (roleId: number) => void
 }) {
+  const { t } = useLocale()
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   async function handleApply() {
     if (message.trim().length < 5) {
-      setError('Message must be at least 5 characters')
+      setError(t('projectDetail.messageMin'))
       return
     }
     setLoading(true)
@@ -52,7 +53,7 @@ function ApplyModal({
       onSuccess(role.id)
     } catch (e) {
       if (isApiException(e)) setError(e.message)
-      else setError('Failed to apply')
+      else setError(t('projectDetail.failedToApply'))
     } finally {
       setLoading(false)
     }
@@ -61,15 +62,17 @@ function ApplyModal({
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
-        <h3 className={styles.modalTitle}>Apply for: {role.role_name}{role.grade ? ` · ${role.grade}` : ''}</h3>
-        <p className={styles.modalSub}>Tell the owner why you're a good fit</p>
+        <h3 className={styles.modalTitle}>
+          {t('projectDetail.applyFor').replace('{{roleName}}', `${role.role_name}${role.grade ? ` · ${role.grade}` : ''}`)}
+        </h3>
+        <p className={styles.modalSub}>{t('projectDetail.applySubtitle')}</p>
 
         {error && <Alert type="error">{error}</Alert>}
 
-        <FormField label="Message" hint="5–1000 characters">
+        <FormField label={t('projectDetail.applyMessage')} hint={t('projectDetail.applyMessageHint')}>
           <Textarea
             rows={5}
-            placeholder="I'd love to join because..."
+            placeholder={t('projectDetail.applyMessagePlaceholder')}
             value={message}
             onChange={e => setMessage(e.target.value)}
             maxLength={1000}
@@ -77,8 +80,8 @@ function ApplyModal({
         </FormField>
 
         <div className={styles.modalActions}>
-          <Button variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button loading={loading} onClick={handleApply}>Send application</Button>
+          <Button variant="secondary" onClick={onClose}>{t('common.cancel')}</Button>
+          <Button loading={loading} onClick={handleApply}>{t('projectDetail.sendApplication')}</Button>
         </div>
       </div>
     </div>
@@ -91,6 +94,7 @@ export function ProjectDetailsPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuth()
+  const { t } = useLocale()
   const from = (location.state as { from?: string })?.from
   const backTo = from === 'my-projects'
     ? '/my-projects'
@@ -99,7 +103,13 @@ export function ProjectDetailsPage() {
     : from === 'admin'
     ? '/admin'
     : '/projects'
-  const backLabel = backTo === '/my-projects' ? 'My Projects' : backTo === '/my-applications' ? 'My Applications' : backTo === '/admin' ? 'Admin Panel' : 'Projects'
+  const backLabel = backTo === '/my-projects'
+    ? t('projectDetail.back.myProjects')
+    : backTo === '/my-applications'
+    ? t('projectDetail.back.myApplications')
+    : backTo === '/admin'
+    ? t('projectDetail.back.admin')
+    : t('projectDetail.back.projects')
 
   const [project, setProject] = useState<Project | null>(null)
   const [myApplications, setMyApplications] = useState<ApplicationWithRole[]>([])
@@ -134,9 +144,9 @@ export function ProjectDetailsPage() {
       setProject(p as Project)
       if (apps) setMyApplications((apps as { items: ApplicationWithRole[] }).items ?? [])
     })
-      .catch(() => setError('Project not found'))
+      .catch(() => setError(t('projectDetail.projectNotFound')))
       .finally(() => setLoading(false))
-  }, [id, user])
+  }, [id, user, t])
 
   const isOwner = user && project && user.id === project.owner_id
   const isAdmin = user?.is_admin ?? false
@@ -144,7 +154,7 @@ export function ProjectDetailsPage() {
 
   async function handleAdminBan() {
     if (!project) return
-    if (adminBanReason.trim().length < 5) { setAdminBanError('Reason must be at least 5 characters'); return }
+    if (adminBanReason.trim().length < 5) { setAdminBanError(t('projectDetail.banReasonMin')); return }
     setAdminBanLoading(true)
     setAdminBanError('')
     try {
@@ -153,7 +163,7 @@ export function ProjectDetailsPage() {
       setAdminBanModal(false)
       setAdminBanReason('')
     } catch (e) {
-      setAdminBanError(isApiException(e) ? e.message : 'Failed to ban project')
+      setAdminBanError(isApiException(e) ? e.message : t('projectDetail.failedToBan'))
     } finally {
       setAdminBanLoading(false)
     }
@@ -166,7 +176,7 @@ export function ProjectDetailsPage() {
       const updated = await adminApi.unbanProject(project.id)
       setProject(updated)
     } catch (e) {
-      setError(isApiException(e) ? e.message : 'Failed to unban project')
+      setError(isApiException(e) ? e.message : t('projectDetail.failedToUnban'))
     } finally {
       setAdminUnbanLoading(false)
     }
@@ -181,7 +191,7 @@ export function ProjectDetailsPage() {
       setRejectModal(false)
       setRejectNewBanReason('')
     } catch (e) {
-      setRejectError(isApiException(e) ? e.message : 'Failed to review appeal')
+      setRejectError(isApiException(e) ? e.message : t('common.errorGeneric'))
     } finally {
       setAdminReviewLoading(false)
     }
@@ -196,7 +206,7 @@ export function ProjectDetailsPage() {
       setProject(updated)
       setAppealComment('')
     } catch (e) {
-      setAppealError(isApiException(e) ? e.message : 'Failed to submit appeal')
+      setAppealError(isApiException(e) ? e.message : t('common.errorGeneric'))
     } finally {
       setAppealLoading(false)
     }
@@ -214,7 +224,7 @@ export function ProjectDetailsPage() {
       navigate(backTo)
     } catch (e) {
       if (isApiException(e)) setError(e.message)
-      else setError('Failed to delete')
+      else setError(t('projectDetail.failedToDelete'))
       setDeleting(false)
       setConfirmDelete(false)
     }
@@ -227,13 +237,20 @@ export function ProjectDetailsPage() {
   const roles = project.roles ?? []
   const canApply = user && !isOwner && project.status === 'recruiting'
 
+  const statusLabel: Record<ProjectStatus, string> = {
+    draft: t('status.draft'),
+    recruiting: t('status.recruiting'),
+    completed: t('status.completed'),
+    banned: t('status.banned'),
+  }
+
   return (
     <div className={styles.page}>
       {confirmDelete && project && (
         <ConfirmDeleteModal
-          title="Delete project"
+          title={t('projectDetail.deleteProject')}
           highlight={project.title}
-          description="will be permanently deleted along with all its data. This action cannot be undone."
+          description={t('projectDetail.deleteDesc')}
           deleting={deleting}
           onConfirm={handleDelete}
           onClose={() => setConfirmDelete(false)}
@@ -249,15 +266,15 @@ export function ProjectDetailsPage() {
                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
               </svg>
             </div>
-            <h3 className={styles.modalTitle}>Reject appeal</h3>
-            <p className={styles.modalSub}>The project stays banned. You can update the ban reason.</p>
+            <h3 className={styles.modalTitle}>{t('projectDetail.rejectAppealTitle')}</h3>
+            <p className={styles.modalSub}>{t('projectDetail.rejectAppealSub')}</p>
             {rejectError && <Alert type="error">{rejectError}</Alert>}
             <div className={styles.banReasonField}>
-              <label className={styles.banReasonLabel}>Updated ban reason (optional)</label>
+              <label className={styles.banReasonLabel}>{t('projectDetail.updatedBanReason')}</label>
               <textarea
                 className={styles.banReasonTextarea}
                 rows={2}
-                placeholder={project.ban_reason || 'Leave blank to keep current reason…'}
+                placeholder={project.ban_reason || t('projectDetail.keepCurrentReason')}
                 value={rejectNewBanReason}
                 onChange={e => setRejectNewBanReason(e.target.value)}
                 maxLength={500}
@@ -266,8 +283,8 @@ export function ProjectDetailsPage() {
               <span className={styles.banReasonCount}>{rejectNewBanReason.length}/500</span>
             </div>
             <div className={styles.modalActions}>
-              <Button variant="secondary" onClick={() => { setRejectModal(false); setRejectError(''); setRejectNewBanReason('') }}>Cancel</Button>
-              <Button variant="danger" loading={adminReviewLoading} onClick={() => handleAdminReviewAppeal(false, rejectNewBanReason)}>Reject appeal</Button>
+              <Button variant="secondary" onClick={() => { setRejectModal(false); setRejectError(''); setRejectNewBanReason('') }}>{t('common.cancel')}</Button>
+              <Button variant="danger" loading={adminReviewLoading} onClick={() => handleAdminReviewAppeal(false, rejectNewBanReason)}>{t('projectDetail.rejectAppeal')}</Button>
             </div>
           </div>
         </div>
@@ -282,18 +299,18 @@ export function ProjectDetailsPage() {
                 <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
               </svg>
             </div>
-            <h3 className={styles.modalTitle}>Ban project</h3>
+            <h3 className={styles.modalTitle}>{t('projectDetail.banProject')}</h3>
             <p className={styles.modalSub}>
-              "<strong>{project.title}</strong>" will be hidden from all users. The owner will see the reason.
+              "<strong>{project.title}</strong>" {t('projectDetail.banSub').replace('{{title}}', project.title).split('"{{title}}"')[1] ?? t('projectDetail.banSub')}
             </p>
             {adminBanError && <Alert type="error">{adminBanError}</Alert>}
             <div className={styles.banReasonField}>
-              <label className={styles.banReasonLabel}>Reason for ban</label>
+              <label className={styles.banReasonLabel}>{t('projectDetail.banReason')}</label>
               <textarea
                 ref={banTextareaRef}
                 className={styles.banReasonTextarea}
                 rows={4}
-                placeholder="Describe why this project violates the rules..."
+                placeholder={t('projectDetail.banReasonPlaceholder')}
                 value={adminBanReason}
                 onChange={e => setAdminBanReason(e.target.value)}
                 maxLength={500}
@@ -302,8 +319,8 @@ export function ProjectDetailsPage() {
               <span className={styles.banReasonCount}>{adminBanReason.length}/500</span>
             </div>
             <div className={styles.modalActions}>
-              <Button variant="secondary" onClick={() => { setAdminBanModal(false); setAdminBanError('') }}>Cancel</Button>
-              <Button variant="danger" loading={adminBanLoading} onClick={handleAdminBan}>Ban project</Button>
+              <Button variant="secondary" onClick={() => { setAdminBanModal(false); setAdminBanError('') }}>{t('common.cancel')}</Button>
+              <Button variant="danger" loading={adminBanLoading} onClick={handleAdminBan}>{t('projectDetail.banBtn')}</Button>
             </div>
           </div>
         </div>
@@ -331,7 +348,7 @@ export function ProjectDetailsPage() {
       <div className={styles.hero}>
         <div className={styles.heroMeta}>
           <span className={statusBadgeClass(project.status)}>
-            {PROJECT_STATUS_LABEL[project.status]}
+            {statusLabel[project.status]}
           </span>
           <span className={styles.date}>{formatDate(project.created_at)}</span>
         </div>
@@ -344,18 +361,17 @@ export function ProjectDetailsPage() {
 
         {(project.tags ?? []).length > 0 && (
           <div className={styles.tags}>
-            {project.tags.map(t => (
-              <span key={t.id} className="tag-chip">{t.name}</span>
+            {project.tags.map(tg => (
+              <span key={tg.id} className="tag-chip">{tg.name}</span>
             ))}
           </div>
         )}
 
         {canManage && (
           <div className={styles.ownerActions}>
-            {/* Edit: owner only (admin cannot edit others' projects) */}
             {isOwner && (
               <Button variant="secondary" size="sm" onClick={() => navigate(`/projects/${project.id}/edit`, { state: { from: from ?? null } })}>
-                Edit
+                {t('projectDetail.edit')}
               </Button>
             )}
             {isOwner && (
@@ -366,7 +382,7 @@ export function ProjectDetailsPage() {
                   state: { from: from ?? null }
                 })}
               >
-                Applications
+                {t('projectDetail.applications')}
               </Button>
             )}
             {isAdmin && !isOwner && (
@@ -378,26 +394,26 @@ export function ProjectDetailsPage() {
                     state: { from: from ?? null }
                   })}
                 >
-                  Applications
+                  {t('projectDetail.applications')}
                 </Button>
                 {project.status !== 'banned' ? (
                   <Button variant="danger" size="sm" onClick={() => { setAdminBanModal(true); setAdminBanError('') }}>
-                    Ban
+                    {t('common.ban')}
                   </Button>
                 ) : (
                   <Button variant="secondary" size="sm" loading={adminUnbanLoading} onClick={handleAdminUnban}>
-                    Unban
+                    {t('common.unban')}
                   </Button>
                 )}
               </>
             )}
             <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)}>
-              Delete
+              {t('common.delete')}
             </Button>
           </div>
         )}
 
-        {/* Ban banner — shown to owner and admin */}
+        {/* Ban banner */}
         {project.status === 'banned' && (isOwner || isAdmin) && (
           <div className={styles.banBanner}>
             <div className={styles.banBannerIcon}>
@@ -406,17 +422,17 @@ export function ProjectDetailsPage() {
               </svg>
             </div>
             <div className={styles.banBannerBody}>
-              <p className={styles.banBannerTitle}>This project has been banned</p>
+              <p className={styles.banBannerTitle}>{t('projectDetail.bannedTitle')}</p>
               {project.ban_reason && (
                 <p className={styles.banBannerReason}>{project.ban_reason}</p>
               )}
 
               {isAdmin && !isOwner && project.appeal_status === 'pending' && (
                 <div className={styles.adminAppealReview}>
-                  <p className={styles.banBannerHint}>Owner has submitted an appeal for review.</p>
+                  <p className={styles.banBannerHint}>{t('projectDetail.ownerAppealed')}</p>
                   {project.appeal_comment && (
                     <div className={styles.appealCommentDisplay}>
-                      <span className={styles.appealCommentLabel}>Owner's message:</span>
+                      <span className={styles.appealCommentLabel}>{t('projectDetail.ownerMsg')}</span>
                       <p className={styles.appealCommentText}>{project.appeal_comment}</p>
                     </div>
                   )}
@@ -427,14 +443,14 @@ export function ProjectDetailsPage() {
                       loading={adminReviewLoading}
                       onClick={() => handleAdminReviewAppeal(true)}
                     >
-                      Approve — restore to draft
+                      {t('projectDetail.approveRestore')}
                     </Button>
                     <Button
                       variant="danger"
                       size="sm"
                       onClick={() => { setRejectModal(true); setRejectError('') }}
                     >
-                      Reject appeal
+                      {t('projectDetail.rejectAppeal')}
                     </Button>
                   </div>
                 </div>
@@ -446,24 +462,24 @@ export function ProjectDetailsPage() {
 
                   {project.appeal_status === 'none' || !project.appeal_status ? (
                     <div className={styles.banBannerActions}>
-                      <p className={styles.banBannerHint}>Fix the issues and submit your project for re-review.</p>
+                      <p className={styles.banBannerHint}>{t('projectDetail.appealHint')}</p>
                       <textarea
                         className={styles.appealCommentTextarea}
                         rows={3}
-                        placeholder="Describe what you've changed to fix the violation (optional)..."
+                        placeholder={t('projectDetail.appealPlaceholder')}
                         value={appealComment}
                         onChange={e => setAppealComment(e.target.value)}
                         maxLength={1000}
                       />
                       <button type="button" className={styles.appealBtn} onClick={handleSubmitAppeal} disabled={appealLoading}>
-                        {appealLoading ? 'Submitting…' : 'Submit for review'}
+                        {appealLoading ? t('common.submitting') : t('projectDetail.submitForReview')}
                       </button>
                     </div>
                   ) : project.appeal_status === 'pending' ? (
                     <div className={styles.banBannerActions}>
                       {project.appeal_comment && (
                         <div className={styles.appealCommentDisplay}>
-                          <span className={styles.appealCommentLabel}>Your message to admin:</span>
+                          <span className={styles.appealCommentLabel}>{t('projectDetail.appealOwnerMsg')}</span>
                           <p className={styles.appealCommentText}>{project.appeal_comment}</p>
                         </div>
                       )}
@@ -471,24 +487,24 @@ export function ProjectDetailsPage() {
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                         </svg>
-                        Appeal submitted — awaiting admin review
+                        {t('projectDetail.appealSubmitted')}
                       </p>
                     </div>
                   ) : project.appeal_status === 'rejected' ? (
                     <div className={styles.banBannerActions}>
                       <p className={styles.appealRejected}>
-                        Appeal rejected. Fix the project and resubmit.
+                        {t('projectDetail.appealRejected')}
                       </p>
                       <textarea
                         className={styles.appealCommentTextarea}
                         rows={3}
-                        placeholder="Describe what you've changed this time (optional)..."
+                        placeholder={t('projectDetail.appealResubmitPlaceholder')}
                         value={appealComment}
                         onChange={e => setAppealComment(e.target.value)}
                         maxLength={1000}
                       />
                       <button type="button" className={styles.appealBtn} onClick={handleSubmitAppeal} disabled={appealLoading}>
-                        {appealLoading ? 'Submitting…' : 'Resubmit for review'}
+                        {appealLoading ? t('common.submitting') : t('projectDetail.resubmitForReview')}
                       </button>
                     </div>
                   ) : null}
@@ -501,21 +517,21 @@ export function ProjectDetailsPage() {
 
       <div className={styles.body}>
         <div className={styles.description}>
-          <h2 className={styles.sectionTitle}>About</h2>
+          <h2 className={styles.sectionTitle}>{t('projectDetail.about')}</h2>
           <p className={styles.descText}>{project.description}</p>
         </div>
 
         <div className={styles.roles}>
-          <h2 className={styles.sectionTitle}>Open roles</h2>
+          <h2 className={styles.sectionTitle}>{t('projectDetail.openRoles')}</h2>
 
           {applySuccess && (
             <div className={styles.applySuccess}>
-              <Alert type="success">Application sent! The owner will review it soon.</Alert>
+              <Alert type="success">{t('projectDetail.applySuccess')}</Alert>
             </div>
           )}
 
           {roles.length === 0 ? (
-            <EmptyState title="No roles added yet" />
+            <EmptyState title={t('projectDetail.noRoles')} />
           ) : (
             <div className={styles.roleGrid}>
               {(() => {
@@ -537,11 +553,11 @@ export function ProjectDetailsPage() {
                       <div className={styles.roleSlots}>
                         <div className={styles.roleSlotsRow}>
                           <span className={styles.roleSlotsText}>
-                            {pr.slots_filled} / {pr.slots_total} filled
+                            {t('projectDetail.filled').replace('{{filled}}', String(pr.slots_filled)).replace('{{total}}', String(pr.slots_total))}
                           </span>
                           {isFull
-                            ? <span className={styles.roleSlotsFull}>No slots</span>
-                            : <span className={styles.roleSlotsText}>{free} open</span>
+                            ? <span className={styles.roleSlotsFull}>{t('projectDetail.noSlots')}</span>
+                            : <span className={styles.roleSlotsText}>{t('projectDetail.open').replace('{{count}}', String(free))}</span>
                           }
                         </div>
                         <div className={styles.roleProgressTrack}>
@@ -553,7 +569,7 @@ export function ProjectDetailsPage() {
                       </div>
 
                       {canApply && hasApplied && (
-                        <span className={styles.appliedLabel}>Applied</span>
+                        <span className={styles.appliedLabel}>{t('projectDetail.applied')}</span>
                       )}
                       {canApply && !hasApplied && !isFull && (
                         <Button
@@ -561,15 +577,15 @@ export function ProjectDetailsPage() {
                           size="sm"
                           onClick={() => { setApplyRole(pr); setApplySuccess(false) }}
                         >
-                          Apply
+                          {t('common.apply')}
                         </Button>
                       )}
                       {canApply && !hasApplied && isFull && (
-                        <span className={styles.noSlots}>Positions filled</span>
+                        <span className={styles.noSlots}>{t('projectDetail.positionsFilled')}</span>
                       )}
                       {!user && (
                         <Link to="/login">
-                          <Button variant="ghost" size="sm">Sign in to apply</Button>
+                          <Button variant="ghost" size="sm">{t('projectDetail.signInToApply')}</Button>
                         </Link>
                       )}
                     </div>

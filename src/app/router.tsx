@@ -13,15 +13,16 @@ import { MyProjectsPage } from '@/pages/MyProjectsPage'
 import { MyApplicationsPage } from '@/pages/MyApplicationsPage'
 import { UserProfilePage } from '@/pages/UserProfilePage'
 import { AdminPage } from '@/pages/AdminPage'
+import { LandingPage } from '@/pages/LandingPage'
 
 export function AppRouter() {
   return (
     <Routes>
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
 
       <Route element={<AppLayout />}>
-        <Route index element={<Navigate to="/projects" replace />} />
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/users/:id" element={<UserProfilePage />} />
         <Route path="/projects/:id" element={<ProjectDetailsPage />} />
@@ -84,7 +85,7 @@ export function AppRouter() {
         />
       </Route>
 
-      <Route path="*" element={<Navigate to="/projects" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }

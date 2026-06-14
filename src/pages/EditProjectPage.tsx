@@ -12,13 +12,15 @@ import { Spinner } from '@/shared/ui/Spinner'
 import { TagPicker } from '@/shared/ui/TagPicker'
 import { RoleEditor } from '@/shared/ui/RoleEditor'
 import { isApiException } from '@/shared/api/error'
-import { PROJECT_STATUS_LABEL, PROJECT_STATUSES } from '@/shared/utils/constants'
+import { PROJECT_STATUSES } from '@/shared/utils/constants'
+import { useLocale } from '@/shared/i18n/LocaleContext'
 import styles from './ProjectFormPage.module.css'
 
 export function EditProjectPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
+  const { t } = useLocale()
   const from = (location.state as { from?: string })?.from
 
   const [project, setProject] = useState<Project | null>(null)
@@ -34,34 +36,41 @@ export function EditProjectPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
+  const statusLabel: Record<ProjectStatus, string> = {
+    draft: t('status.draft'),
+    recruiting: t('status.recruiting'),
+    completed: t('status.completed'),
+    banned: t('status.banned'),
+  }
+
   useEffect(() => {
     if (!id) return
     Promise.all([
       projectsApi.getById(Number(id)),
       dictionariesApi.getTags(),
       dictionariesApi.getSystemTags(),
-    ]).then(([p, t, sys]) => {
+    ]).then(([p, tgs, sys]) => {
       setProject(p)
       setTitle(p.title)
       setDescription(p.description)
       setStatus(p.status)
       setSelectedTagIds((p.tags ?? []).map(tg => tg.id))
       setSystemTags(sys.items ?? [])
-      setAllTags(t.items ?? [])
+      setAllTags(tgs.items ?? [])
       setProjectRoles(p.roles ?? [])
-    }).catch(() => setError('Failed to load project'))
+    }).catch(() => setError(t('projectForm.failedToLoad')))
       .finally(() => setLoading(false))
-  }, [id])
+  }, [id, t])
 
   async function handleCreateTag(name: string) {
     const tag = await dictionariesApi.createTag(name)
-    setAllTags(prev => prev.some(t => t.id === tag.id) ? prev : [...prev, tag])
+    setAllTags(prev => prev.some(tg => tg.id === tag.id) ? prev : [...prev, tag])
     setSelectedTagIds(prev => prev.includes(tag.id) ? prev : [...prev, tag.id])
   }
 
   async function handleRemoveTag(tagId: number) {
     setSelectedTagIds(prev => prev.filter(x => x !== tagId))
-    try { await dictionariesApi.deleteTag(tagId) } catch { /* still used elsewhere — fine */ }
+    try { await dictionariesApi.deleteTag(tagId) } catch { /* still used elsewhere */ }
   }
 
   const isAdminEdit = from === 'admin'
@@ -91,8 +100,8 @@ export function EditProjectPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    if (title.trim().length < 3) { setError('Title must be at least 3 characters'); return }
-    if (description.trim().length < 10) { setError('Description must be at least 10 characters'); return }
+    if (title.trim().length < 3) { setError(t('projectForm.titleMin')); return }
+    if (description.trim().length < 10) { setError(t('projectForm.descMin')); return }
     setSaving(true)
     setError('')
     try {
@@ -114,7 +123,7 @@ export function EditProjectPage() {
       navigate(`/projects/${id}`, { state: { from: from ?? null } })
     } catch (err) {
       if (isApiException(err)) setError(err.message)
-      else setError('Failed to save changes')
+      else setError(t('projectForm.failedToSave'))
       setSaving(false)
     }
   }
@@ -124,16 +133,16 @@ export function EditProjectPage() {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Edit project</h1>
+        <h1 className={styles.title}>{t('projectForm.editTitle')}</h1>
         <p className={styles.subtitle}>{project?.title}</p>
       </div>
 
       <form className={styles.form} onSubmit={handleSubmit} noValidate>
         {error && <Alert type="error">{error}</Alert>}
 
-        <FormField label="Title" hint="3–120 characters">
+        <FormField label={t('projectForm.titleLabel')} hint={t('projectForm.titleHint')}>
           <Input
-            placeholder="My awesome project"
+            placeholder={t('projectForm.titlePlaceholder')}
             value={title}
             onChange={e => setTitle(e.target.value)}
             maxLength={120}
@@ -141,9 +150,9 @@ export function EditProjectPage() {
           />
         </FormField>
 
-        <FormField label="Description" hint="10–2000 characters">
+        <FormField label={t('projectForm.descLabel')} hint={t('projectForm.descHint')}>
           <Textarea
-            placeholder="What are you building?"
+            placeholder={t('projectForm.descPlaceholderEdit')}
             value={description}
             onChange={e => setDescription(e.target.value)}
             maxLength={2000}
@@ -151,15 +160,15 @@ export function EditProjectPage() {
           />
         </FormField>
 
-        <FormField label="Status">
+        <FormField label={t('projectForm.statusLabel')}>
           <Select value={status} onChange={e => setStatus(e.target.value as ProjectStatus)}>
             {PROJECT_STATUSES.map(s => (
-              <option key={s} value={s}>{PROJECT_STATUS_LABEL[s]}</option>
+              <option key={s} value={s}>{statusLabel[s]}</option>
             ))}
           </Select>
         </FormField>
 
-        <FormField label="Tags" hint="Search existing tags or create new ones">
+        <FormField label={t('projectForm.tagsLabel')} hint={t('projectForm.tagsHint')}>
           <TagPicker
             allTags={allTags}
             systemTags={systemTags}
@@ -170,7 +179,7 @@ export function EditProjectPage() {
           />
         </FormField>
 
-        <FormField label="Roles" hint="Add and edit roles for this project">
+        <FormField label={t('projectForm.rolesLabel')} hint={t('projectForm.rolesHintEdit')}>
           <RoleEditor
             roles={projectRoles}
             onAdd={handleAddRole}
@@ -180,8 +189,8 @@ export function EditProjectPage() {
         </FormField>
 
         <div className={styles.actions}>
-          <Button type="button" variant="secondary" onClick={() => navigate(`/projects/${id}`, { state: { from: from ?? null } })}>Cancel</Button>
-          <Button type="submit" loading={saving}>Save changes</Button>
+          <Button type="button" variant="secondary" onClick={() => navigate(`/projects/${id}`, { state: { from: from ?? null } })}>{t('projectForm.cancelBtn')}</Button>
+          <Button type="submit" loading={saving}>{t('projectForm.saveBtn')}</Button>
         </div>
       </form>
     </div>

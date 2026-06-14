@@ -6,14 +6,8 @@ import { Spinner } from '@/shared/ui/Spinner'
 import { Alert } from '@/shared/ui/Alert'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { formatDate } from '@/shared/utils/date'
+import { useLocale } from '@/shared/i18n/LocaleContext'
 import styles from './MyApplicationsPage.module.css'
-
-const STATUS_LABEL: Record<ApplicationStatus, string> = {
-  pending:   'Pending',
-  accepted:  'Accepted',
-  rejected:  'Rejected',
-  withdrawn: 'Withdrawn',
-}
 
 const STATUS_CLASS: Record<ApplicationStatus, string> = {
   pending:   styles.statusPending,
@@ -23,28 +17,36 @@ const STATUS_CLASS: Record<ApplicationStatus, string> = {
 }
 
 export function MyApplicationsPage() {
+  const { t } = useLocale()
   const [applications, setApplications] = useState<ApplicationWithRole[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
+  const STATUS_LABEL: Record<ApplicationStatus, string> = {
+    pending:   t('myApplications.statusPending'),
+    accepted:  t('myApplications.statusAccepted'),
+    rejected:  t('myApplications.statusRejected'),
+    withdrawn: t('myApplications.statusWithdrawn'),
+  }
+
   useEffect(() => {
     applicationsApi.listMine()
       .then(r => setApplications(r.items ?? []))
-      .catch(() => setError('Failed to load applications'))
+      .catch(() => setError(t('myApplications.failedToLoad')))
       .finally(() => setLoading(false))
-  }, [])
+  }, [t])
 
   if (loading) return <Spinner center />
   if (error) return <Alert type="error">{error}</Alert>
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.heading}>My Applications</h1>
+      <h1 className={styles.heading}>{t('myApplications.title')}</h1>
 
       {applications.length === 0 ? (
         <EmptyState
-          title="No applications yet"
-          description="Apply to open roles in projects to see them here"
+          title={t('myApplications.emptyTitle')}
+          description={t('myApplications.emptyDesc')}
         />
       ) : (
         <div className={styles.list}>

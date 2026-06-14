@@ -5,13 +5,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:8080
     container_name: devmatch-frontend
     restart: unless-stopped
     ports:
       - "3125:80"
     environment:
       - NODE_ENV=production
-
-networks:
-  devmatch-net:
-    external: true

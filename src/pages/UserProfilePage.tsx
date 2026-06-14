@@ -6,10 +6,12 @@ import { Spinner } from '@/shared/ui/Spinner'
 import { Alert } from '@/shared/ui/Alert'
 import { formatDate } from '@/shared/utils/date'
 import { BACKEND_URL } from '@/shared/utils/constants'
+import { useLocale } from '@/shared/i18n/LocaleContext'
 import styles from './UserProfilePage.module.css'
 
 export function UserProfilePage() {
   const { id } = useParams<{ id: string }>()
+  const { t } = useLocale()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -19,9 +21,9 @@ export function UserProfilePage() {
     setLoading(true)
     usersApi.getProfile(Number(id))
       .then(setUser)
-      .catch(() => setError('User not found'))
+      .catch(() => setError(t('userProfile.notFound')))
       .finally(() => setLoading(false))
-  }, [id])
+  }, [id, t])
 
   if (loading) return <Spinner center />
   if (error) return <Alert type="error">{error}</Alert>
@@ -30,7 +32,7 @@ export function UserProfilePage() {
   return (
     <div className={styles.page}>
       <div className={styles.back}>
-        <Link to={-1 as unknown as string} className={styles.backLink}>← Back</Link>
+        <Link to={-1 as unknown as string} className={styles.backLink}>{t('userProfile.backLink')}</Link>
       </div>
 
       <div className={styles.card}>
@@ -54,16 +56,18 @@ export function UserProfilePage() {
           {user.bio ? (
             <p className={styles.bio}>{user.bio}</p>
           ) : (
-            <p className={styles.bioEmpty}>No bio provided.</p>
+            <p className={styles.bioEmpty}>{t('userProfile.noBio')}</p>
           )}
 
           <div className={styles.meta}>
-            <span className={styles.joinDate}>Joined {formatDate(user.created_at)}</span>
+            <span className={styles.joinDate}>
+              {t('userProfile.joined').replace('{{date}}', formatDate(user.created_at))}
+            </span>
           </div>
 
           {(user.skills ?? []).length > 0 && (
             <div className={styles.skillsSection}>
-              <div className={styles.skillsLabel}>Skills</div>
+              <div className={styles.skillsLabel}>{t('userProfile.skills')}</div>
               <div className={styles.skills}>
                 {user.skills.map(s => (
                   <span key={s.id} className="tag-chip">{s.name}</span>

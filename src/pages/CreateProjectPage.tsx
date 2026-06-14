@@ -11,14 +11,16 @@ import { Alert } from '@/shared/ui/Alert'
 import { TagPicker } from '@/shared/ui/TagPicker'
 import { RoleEditor } from '@/shared/ui/RoleEditor'
 import { isApiException } from '@/shared/api/error'
-import { PROJECT_STATUS_LABEL, PROJECT_STATUSES } from '@/shared/utils/constants'
+import { PROJECT_STATUSES } from '@/shared/utils/constants'
 import type { ProjectRole } from '@/shared/types/api'
+import { useLocale } from '@/shared/i18n/LocaleContext'
 import styles from './ProjectFormPage.module.css'
 
 interface PendingRole { roleName: string; grade: string; slots: number }
 
 export function CreateProjectPage() {
   const navigate = useNavigate()
+  const { t } = useLocale()
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -34,6 +36,13 @@ export function CreateProjectPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const statusLabel: Record<ProjectStatus, string> = {
+    draft: t('status.draft'),
+    recruiting: t('status.recruiting'),
+    completed: t('status.completed'),
+    banned: t('status.banned'),
+  }
+
   useEffect(() => {
     Promise.all([dictionariesApi.getTags(), dictionariesApi.getSystemTags()])
       .then(([all, sys]) => {
@@ -46,17 +55,15 @@ export function CreateProjectPage() {
 
   async function handleCreateTag(name: string) {
     const tag = await dictionariesApi.createTag(name)
-    setAllTags(prev => prev.some(t => t.id === tag.id) ? prev : [...prev, tag])
+    setAllTags(prev => prev.some(tg => tg.id === tag.id) ? prev : [...prev, tag])
     setSelectedTagIds(prev => prev.includes(tag.id) ? prev : [...prev, tag.id])
   }
 
   async function handleRemoveTag(tagId: number) {
     setSelectedTagIds(prev => prev.filter(id => id !== tagId))
-    // Attempt to clean up tag if unused — fire-and-forget
-    try { await dictionariesApi.deleteTag(tagId) } catch { /* tag still used by others — ignore */ }
+    try { await dictionariesApi.deleteTag(tagId) } catch { /* tag still used by others */ }
   }
 
-  // Pending roles for create mode — no API calls until project created
   const pendingAsRoles: ProjectRole[] = pendingRoles.map((pr, idx) => ({
     id: -(idx + 1),
     project_id: 0,
@@ -68,8 +75,8 @@ export function CreateProjectPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    if (title.trim().length < 3) { setError('Title must be at least 3 characters'); return }
-    if (description.trim().length < 10) { setError('Description must be at least 10 characters'); return }
+    if (title.trim().length < 3) { setError(t('projectForm.titleMin')); return }
+    if (description.trim().length < 10) { setError(t('projectForm.descMin')); return }
     setLoading(true)
     setError('')
     try {
@@ -87,7 +94,7 @@ export function CreateProjectPage() {
       navigate('/my-projects')
     } catch (err) {
       if (isApiException(err)) setError(err.message)
-      else setError('Failed to create project')
+      else setError(t('projectForm.failedToCreate'))
       setLoading(false)
     }
   }
@@ -95,16 +102,16 @@ export function CreateProjectPage() {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <h1 className={styles.title}>New project</h1>
-        <p className={styles.subtitle}>Describe your idea and start recruiting</p>
+        <h1 className={styles.title}>{t('projectForm.newTitle')}</h1>
+        <p className={styles.subtitle}>{t('projectForm.newSubtitle')}</p>
       </div>
 
       <form className={styles.form} onSubmit={handleSubmit} noValidate>
         {error && <Alert type="error">{error}</Alert>}
 
-        <FormField label="Title" hint="3–120 characters">
+        <FormField label={t('projectForm.titleLabel')} hint={t('projectForm.titleHint')}>
           <Input
-            placeholder="My awesome project"
+            placeholder={t('projectForm.titlePlaceholder')}
             value={title}
             onChange={e => setTitle(e.target.value)}
             maxLength={120}
@@ -112,9 +119,9 @@ export function CreateProjectPage() {
           />
         </FormField>
 
-        <FormField label="Description" hint="10–2000 characters">
+        <FormField label={t('projectForm.descLabel')} hint={t('projectForm.descHint')}>
           <Textarea
-            placeholder="What are you building? What problem does it solve?"
+            placeholder={t('projectForm.descPlaceholder')}
             value={description}
             onChange={e => setDescription(e.target.value)}
             maxLength={2000}
@@ -122,16 +129,16 @@ export function CreateProjectPage() {
           />
         </FormField>
 
-        <FormField label="Status">
+        <FormField label={t('projectForm.statusLabel')}>
           <Select value={status} onChange={e => setStatus(e.target.value as ProjectStatus)}>
             {PROJECT_STATUSES.map(s => (
-              <option key={s} value={s}>{PROJECT_STATUS_LABEL[s]}</option>
+              <option key={s} value={s}>{statusLabel[s]}</option>
             ))}
           </Select>
         </FormField>
 
         {!tagsLoading && (
-          <FormField label="Tags" hint="Search existing tags or create new ones">
+          <FormField label={t('projectForm.tagsLabel')} hint={t('projectForm.tagsHint')}>
             <TagPicker
               allTags={allTags}
               systemTags={systemTags}
@@ -143,7 +150,7 @@ export function CreateProjectPage() {
           </FormField>
         )}
 
-        <FormField label="Roles" hint="Add roles you are looking for (optional)">
+        <FormField label={t('projectForm.rolesLabel')} hint={t('projectForm.rolesHint')}>
           <RoleEditor
             roles={pendingAsRoles}
             pending
@@ -156,8 +163,8 @@ export function CreateProjectPage() {
         </FormField>
 
         <div className={styles.actions}>
-          <Button type="button" variant="secondary" onClick={() => navigate(-1)}>Cancel</Button>
-          <Button type="submit" loading={loading}>Create project</Button>
+          <Button type="button" variant="secondary" onClick={() => navigate(-1)}>{t('projectForm.cancelBtn')}</Button>
+          <Button type="submit" loading={loading}>{t('projectForm.createBtn')}</Button>
         </div>
       </form>
     </div>

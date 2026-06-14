@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { meApi, dictionariesApi } from '@/shared/api/services'
 import type { Skill } from '@/shared/types/api'
 import { useAuth } from '@/features/auth/AuthContext'
+import { useLocale } from '@/shared/i18n/LocaleContext'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import { Textarea } from '@/shared/ui/Textarea'
@@ -15,6 +16,7 @@ import styles from './MePage.module.css'
 
 export function MePage() {
   const { user, refreshUser } = useAuth()
+  const { t } = useLocale()
 
   const [editing, setEditing] = useState(false)
   const [allSkills, setAllSkills] = useState<Skill[]>([])
@@ -53,7 +55,7 @@ export function MePage() {
       await refreshUser()
     } catch (err) {
       if (isApiException(err)) setError(err.message)
-      else setError('Failed to upload avatar')
+      else setError(t('me.failedAvatar'))
     } finally {
       setAvatarUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -68,7 +70,7 @@ export function MePage() {
       await refreshUser()
     } catch (err) {
       if (isApiException(err)) setError(err.message)
-      else setError('Failed to remove avatar')
+      else setError(t('me.failedAvatarDelete'))
     } finally {
       setAvatarUploading(false)
     }
@@ -87,8 +89,8 @@ export function MePage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     const errs: { username?: string } = {}
-    if (!username.trim()) errs.username = 'Username is required'
-    else if (username.trim().length < 2) errs.username = 'At least 2 characters'
+    if (!username.trim()) errs.username = t('me.usernameRequired')
+    else if (username.trim().length < 2) errs.username = t('me.usernameMin')
     if (Object.keys(errs).length) { setFieldErrors(errs); return }
     setFieldErrors({})
     setSaving(true)
@@ -105,7 +107,7 @@ export function MePage() {
       setSuccess(true)
     } catch (err) {
       if (isApiException(err)) setError(err.message)
-      else setError('Failed to save changes')
+      else setError(t('me.failedToSave'))
     } finally {
       setSaving(false)
     }
@@ -139,7 +141,7 @@ export function MePage() {
               className={styles.avatarUploadBtn}
               onClick={() => fileInputRef.current?.click()}
               disabled={avatarUploading}
-              title="Upload avatar"
+              title={t('me.uploadAvatarTitle')}
             >
               {avatarUploading ? '…' : '✎'}
             </button>
@@ -149,7 +151,7 @@ export function MePage() {
                 className={styles.avatarDeleteBtn}
                 onClick={handleAvatarDelete}
                 disabled={avatarUploading}
-                title="Remove avatar"
+                title={t('me.removeAvatarTitle')}
               >
                 ✕
               </button>
@@ -159,20 +161,20 @@ export function MePage() {
         <div className={styles.info}>
           <h1 className={styles.username}>{user.username}</h1>
           <p className={styles.email}>{user.email}</p>
-          <p className={styles.since}>Member since {formatDate(user.created_at)}</p>
+          <p className={styles.since}>{t('me.memberSince').replace('{{date}}', formatDate(user.created_at))}</p>
         </div>
         {!editing && (
-          <Button variant="secondary" size="sm" onClick={startEdit}>Edit profile</Button>
+          <Button variant="secondary" size="sm" onClick={startEdit}>{t('me.editProfile')}</Button>
         )}
       </div>
 
-      {success && <Alert type="success">Profile updated successfully</Alert>}
+      {success && <Alert type="success">{t('me.saveSuccess')}</Alert>}
 
       {editing ? (
         <form className={styles.form} onSubmit={handleSubmit} noValidate>
           {error && <Alert type="error">{error}</Alert>}
 
-          <FormField label="Username" hint="2–64 characters" error={fieldErrors.username}>
+          <FormField label={t('me.usernameLabel')} hint={t('me.usernameHint')} error={fieldErrors.username}>
             <Input
               value={username}
               onChange={e => { setUsername(e.target.value); setFieldErrors(p => ({ ...p, username: undefined })) }}
@@ -181,18 +183,18 @@ export function MePage() {
             />
           </FormField>
 
-          <FormField label="Bio" hint="Up to 500 characters">
+          <FormField label={t('me.bioLabel')} hint={t('me.bioHint')}>
             <Textarea
               rows={3}
               value={bio}
               onChange={e => setBio(e.target.value)}
               maxLength={500}
-              placeholder="Tell others about yourself..."
+              placeholder={t('me.bioPlaceholder')}
             />
           </FormField>
 
           {allSkills.length > 0 && (
-            <FormField label="Skills">
+            <FormField label={t('me.skillsPickerLabel')}>
               <SkillPicker
                 allSkills={allSkills}
                 selectedSkillIds={selectedSkillIds}
@@ -203,23 +205,23 @@ export function MePage() {
           )}
 
           <div className={styles.actions}>
-            <Button type="button" variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
-            <Button type="submit" loading={saving}>Save changes</Button>
+            <Button type="button" variant="secondary" onClick={() => setEditing(false)}>{t('me.cancelBtn')}</Button>
+            <Button type="submit" loading={saving}>{t('me.saveBtn')}</Button>
           </div>
         </form>
       ) : (
         <div className={styles.view}>
           {user.bio && (
             <div className={styles.section}>
-              <h2 className={styles.sectionTitle}>Bio</h2>
+              <h2 className={styles.sectionTitle}>{t('me.bioLabel')}</h2>
               <p className={styles.bioText}>{user.bio}</p>
             </div>
           )}
 
           <div className={styles.section}>
-            <h2 className={styles.sectionTitle}>Skills</h2>
+            <h2 className={styles.sectionTitle}>{t('me.skillsLabel')}</h2>
             {(user.skills ?? []).length === 0 ? (
-              <p className={styles.empty}>No skills added yet</p>
+              <p className={styles.empty}>{t('me.noSkillsYet')}</p>
             ) : (
               <div className={styles.skillList}>
                 {user.skills.map(s => (

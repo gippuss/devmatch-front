@@ -7,9 +7,9 @@ import { Spinner } from '@/shared/ui/Spinner'
 import { Alert } from '@/shared/ui/Alert'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { isApiException } from '@/shared/api/error'
-import { PROJECT_STATUS_LABEL } from '@/shared/utils/constants'
 import { formatDate } from '@/shared/utils/date'
 import { ConfirmDeleteModal } from '@/shared/ui/ConfirmDeleteModal'
+import { useLocale } from '@/shared/i18n/LocaleContext'
 import styles from './MyProjectsPage.module.css'
 
 function statusBadgeClass(status: ProjectStatus): string {
@@ -24,6 +24,7 @@ function statusBadgeClass(status: ProjectStatus): string {
 
 export function MyProjectsPage() {
   const navigate = useNavigate()
+  const { t } = useLocale()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -31,12 +32,19 @@ export function MyProjectsPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
   const projectToDelete = projects.find(p => p.id === confirmDeleteId) ?? null
 
+  const statusLabel: Record<ProjectStatus, string> = {
+    draft: t('status.draft'),
+    recruiting: t('status.recruiting'),
+    completed: t('status.completed'),
+    banned: t('status.banned'),
+  }
+
   useEffect(() => {
     projectsApi.listMine()
       .then(r => setProjects(r.items ?? []))
-      .catch(() => setError('Failed to load your projects'))
+      .catch(() => setError(t('myProjects.failedToLoad')))
       .finally(() => setLoading(false))
-  }, [])
+  }, [t])
 
   async function handleDelete() {
     if (!confirmDeleteId) return
@@ -48,7 +56,7 @@ export function MyProjectsPage() {
       setConfirmDeleteId(null)
     } catch (e) {
       if (isApiException(e)) setError(e.message)
-      else setError('Failed to delete project')
+      else setError(t('myProjects.failedToDelete'))
     } finally {
       setDeletingId(null)
     }
@@ -60,9 +68,9 @@ export function MyProjectsPage() {
     <div className={styles.page}>
       {projectToDelete && (
         <ConfirmDeleteModal
-          title="Delete project"
+          title={t('myProjects.deleteTitle')}
           highlight={projectToDelete.title}
-          description="will be permanently deleted along with all its data. This action cannot be undone."
+          description={t('myProjects.deleteDesc')}
           deleting={deletingId === confirmDeleteId}
           onConfirm={handleDelete}
           onClose={() => setConfirmDeleteId(null)}
@@ -71,12 +79,12 @@ export function MyProjectsPage() {
 
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>My Projects</h1>
-          <p className={styles.subtitle}>Manage your project listings</p>
+          <h1 className={styles.title}>{t('myProjects.title')}</h1>
+          <p className={styles.subtitle}>{t('myProjects.subtitle')}</p>
         </div>
         {projects.length > 0 && (
           <Button variant="primary" size="sm" onClick={() => navigate('/projects/new', { state: { from: 'my-projects' } })}>
-            + New project
+            {t('common.newProject')}
           </Button>
         )}
       </div>
@@ -85,9 +93,9 @@ export function MyProjectsPage() {
 
       {projects.length === 0 ? (
         <EmptyState
-          title="No projects yet"
-          description="Create your first project and start recruiting"
-          action={<Button onClick={() => navigate('/projects/new', { state: { from: 'my-projects' } })}>Create project</Button>}
+          title={t('myProjects.emptyTitle')}
+          description={t('myProjects.emptyDesc')}
+          action={<Button onClick={() => navigate('/projects/new', { state: { from: 'my-projects' } })}>{t('myProjects.createBtn')}</Button>}
         />
       ) : (
         <div className={styles.grid}>
@@ -102,7 +110,7 @@ export function MyProjectsPage() {
               >
                 <div className={styles.cardHeader}>
                   <span className={statusBadgeClass(project.status)}>
-                    {PROJECT_STATUS_LABEL[project.status]}
+                    {statusLabel[project.status]}
                   </span>
                   <span className={styles.date}>{formatDate(project.created_at)}</span>
                 </div>
@@ -116,10 +124,10 @@ export function MyProjectsPage() {
                     </svg>
                     <span>
                       {project.appeal_status === 'pending'
-                        ? 'Appeal under review'
+                        ? t('myProjects.appealUnderReview')
                         : project.appeal_status === 'rejected'
-                        ? 'Appeal rejected — open to resubmit'
-                        : 'Banned — open to see reason & appeal'}
+                        ? t('myProjects.appealRejected')
+                        : t('myProjects.bannedNotice')}
                     </span>
                   </div>
                 )}
@@ -128,8 +136,8 @@ export function MyProjectsPage() {
 
                 {(project.tags ?? []).length > 0 && !isBanned && (
                   <div className={styles.tagList}>
-                    {project.tags.slice(0, 4).map(t => (
-                      <span key={t.id} className="tag-chip">{t.name}</span>
+                    {project.tags.slice(0, 4).map(tg => (
+                      <span key={tg.id} className="tag-chip">{tg.name}</span>
                     ))}
                     {project.tags.length > 4 && (
                       <span className="tag-chip">+{project.tags.length - 4}</span>
@@ -144,7 +152,7 @@ export function MyProjectsPage() {
                       size="sm"
                       onClick={e => { e.preventDefault(); e.stopPropagation(); navigate(`/projects/${project.id}/edit`, { state: { from: 'my-projects' } }) }}
                     >
-                      Edit
+                      {t('common.edit')}
                     </Button>
                   )}
                   {!isBanned && (
@@ -153,7 +161,7 @@ export function MyProjectsPage() {
                       size="sm"
                       onClick={e => { e.preventDefault(); e.stopPropagation(); navigate(`/projects/${project.id}/applications`, { state: { from: 'my-projects' } }) }}
                     >
-                      Applications
+                      {t('common.applications')}
                     </Button>
                   )}
                   <div className={styles.deleteWrap}>
@@ -162,7 +170,7 @@ export function MyProjectsPage() {
                       size="sm"
                       onClick={e => { e.preventDefault(); e.stopPropagation(); setConfirmDeleteId(project.id) }}
                     >
-                      Delete
+                      {t('common.delete')}
                     </Button>
                   </div>
                 </div>

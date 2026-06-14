@@ -41,7 +41,7 @@ export function AppLayout() {
     <div className={styles.layout}>
       <header className={styles.header}>
         <nav className={styles.nav}>
-          <NavLink to="/projects" className={styles.brand}>DevMatch</NavLink>
+          <NavLink to="/" className={styles.brand}>DevMatch</NavLink>
 
           <div className={styles.links}>
             <NavLink
